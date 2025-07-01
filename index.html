@@ -2,19 +2,22 @@
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8">
-  <title>Arqueiro Lendário</title>
+  <title>Arqueiro Lendário - Edição Especial</title>
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Bangers&family=Press+Start+2P&display=swap');
+    
     body {
-      background: linear-gradient(135deg, #1a1a2e, #16213e);
+      background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
       margin: 0;
       overflow: hidden;
       color: white;
-      font-family: 'Arial', sans-serif;
+      font-family: 'Press Start 2P', cursive;
       text-align: center;
       height: 100vh;
       display: flex;
       flex-direction: column;
       justify-content: center;
+      user-select: none;
     }
     
     canvas {
@@ -22,78 +25,99 @@
       background: #111;
       margin: 20px auto;
       border-radius: 10px;
-      box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+      box-shadow: 0 0 30px rgba(0, 255, 255, 0.3);
+      border: 2px solid #00ffff;
     }
     
     #menu {
-      background: rgba(0, 0, 0, 0.7);
+      background: rgba(0, 0, 0, 0.8);
       padding: 30px;
       border-radius: 15px;
-      max-width: 600px;
+      max-width: 700px;
       margin: 0 auto;
-      box-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
-      border: 2px solid #4CAF50;
+      box-shadow: 0 0 40px rgba(0, 255, 255, 0.4);
+      border: 3px solid #00ff88;
+      text-shadow: 0 0 10px rgba(0, 255, 200, 0.5);
     }
     
     h1 {
-      color: #4CAF50;
-      text-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+      color: #00ff88;
+      text-shadow: 0 0 15px rgba(0, 255, 150, 0.7);
       margin-bottom: 30px;
-      font-size: 2.5em;
+      font-size: 3em;
+      font-family: 'Bangers', cursive;
+      letter-spacing: 3px;
     }
     
     .power-options {
       display: flex;
       flex-wrap: wrap;
       justify-content: center;
-      gap: 20px;
+      gap: 25px;
       margin-bottom: 30px;
     }
     
     .power-option {
-      background: rgba(30, 30, 46, 0.8);
-      padding: 15px;
-      border-radius: 10px;
-      width: 150px;
+      background: rgba(20, 20, 40, 0.9);
+      padding: 20px;
+      border-radius: 15px;
+      width: 160px;
       cursor: pointer;
       transition: all 0.3s;
       border: 2px solid transparent;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
     }
     
     .power-option:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-      border-color: #4CAF50;
+      transform: translateY(-8px);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);
+      border-color: #00ff88;
     }
     
     .power-option.selected {
-      border-color: #4CAF50;
-      background: rgba(76, 175, 80, 0.2);
+      border-color: #00ff88;
+      background: rgba(0, 255, 150, 0.15);
+      box-shadow: 0 0 20px rgba(0, 255, 150, 0.3);
     }
     
-    .power-option img {
-      width: 60px;
-      height: 60px;
-      margin-bottom: 10px;
+    .power-option .character-icon {
+      font-size: 50px;
+      margin-bottom: 15px;
+      filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.7));
+    }
+    
+    .power-option div:not(.character-icon) {
+      margin: 5px 0;
+    }
+    
+    .power-description {
+      font-size: 0.7em;
+      color: #aaa;
+      margin-top: 10px;
+      line-height: 1.4;
+      font-family: 'Arial', sans-serif;
     }
     
     button {
-      background: linear-gradient(135deg, #4CAF50, #2E7D32);
+      background: linear-gradient(135deg, #00ff88, #007544);
       color: white;
       border: none;
-      padding: 12px 30px;
-      font-size: 1.2em;
+      padding: 15px 40px;
+      font-size: 1.3em;
       border-radius: 50px;
       cursor: pointer;
       transition: all 0.3s;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
       margin-top: 20px;
+      font-family: 'Press Start 2P', cursive;
+      text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+      letter-spacing: 1px;
     }
     
     button:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 10px rgba(0, 0, 0, 0.2);
-      background: linear-gradient(135deg, #45a049, #1B5E20);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+      background: linear-gradient(135deg, #00e67b, #00633a);
     }
     
     button:active {
@@ -107,31 +131,34 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0, 0, 0, 0.9);
+      background: rgba(0, 0, 0, 0.95);
       flex-direction: column;
       justify-content: center;
       align-items: center;
       z-index: 100;
+      text-align: center;
     }
     
     #victory-screen h1 {
       color: gold;
-      font-size: 4em;
-      text-shadow: 0 0 20px gold;
+      font-size: 5em;
+      text-shadow: 0 0 30px gold;
       margin-bottom: 30px;
       animation: pulse 2s infinite;
+      font-family: 'Bangers', cursive;
+    }
+    
+    #victory-screen p {
+      font-size: 1.5em;
+      margin-bottom: 40px;
+      color: #00ff88;
+      text-shadow: 0 0 10px rgba(0, 255, 150, 0.5);
     }
     
     @keyframes pulse {
       0% { transform: scale(1); }
-      50% { transform: scale(1.05); }
+      50% { transform: scale(1.1); }
       100% { transform: scale(1); }
-    }
-    
-    .power-description {
-      font-size: 0.9em;
-      color: #aaa;
-      margin-top: 5px;
     }
     
     #wave-display {
@@ -139,58 +166,185 @@
       top: 20px;
       left: 50%;
       transform: translateX(-50%);
-      background: rgba(0, 0, 0, 0.7);
-      padding: 10px 20px;
-      border-radius: 20px;
-      font-size: 1.2em;
-      border: 1px solid #4CAF50;
+      background: rgba(0, 0, 0, 0.8);
+      padding: 12px 25px;
+      border-radius: 25px;
+      font-size: 1.3em;
+      border: 2px solid #00ff88;
+      box-shadow: 0 0 15px rgba(0, 255, 150, 0.3);
+      text-shadow: 0 0 5px rgba(0, 255, 150, 0.5);
+    }
+    
+    #controls {
+      margin-top: 30px;
+      background: rgba(0, 0, 0, 0.6);
+      padding: 15px;
+      border-radius: 10px;
+      border: 1px solid #00ffff;
+    }
+    
+    #controls h3 {
+      color: #00ffff;
+      margin-bottom: 10px;
+      font-size: 1em;
+    }
+    
+    #controls p {
+      font-size: 0.7em;
+      margin: 5px 0;
+      font-family: 'Arial', sans-serif;
+    }
+    
+    .particle {
+      position: absolute;
+      background: white;
+      border-radius: 50%;
+      pointer-events: none;
+    }
+    
+    #loading-screen {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #0f0c29;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    
+    #loading-bar {
+      width: 300px;
+      height: 20px;
+      background: rgba(0, 0, 0, 0.5);
+      border-radius: 10px;
+      margin-top: 20px;
+      overflow: hidden;
+      border: 2px solid #00ff88;
+    }
+    
+    #loading-progress {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #00ff88, #00ffff);
+      transition: width 0.3s;
+    }
+    
+    #loading-text {
+      margin-top: 15px;
+      color: #00ff88;
+      font-size: 0.8em;
     }
   </style>
 </head>
 <body>
+  <div id="loading-screen">
+    <h1 style="color: #00ff88; font-size: 3em;">ARQUEIRO LENDÁRIO</h1>
+    <div id="loading-bar">
+      <div id="loading-progress"></div>
+    </div>
+    <div id="loading-text">Carregando recursos...</div>
+  </div>
+
   <div id="menu">
-    <h1>Arqueiro Lendário</h1>
+    <h1>ARQUEIRO LENDÁRIO</h1>
     <div class="power-options">
       <div class="power-option selected" onclick="selectPower('explosive')">
-       <div class="character-icon">💣</div>
-        <div>Explosivo</div>
-        <div class="power-description">Explode em volta de si dando dano em área</div>
+       <div class="character-icon">💥</div>
+        <div>EXPLOSIVO</div>
+        <div class="power-description">Cria uma explosão poderosa que causa dano em área e empurra inimigos</div>
       </div>
       <div class="power-option" onclick="selectPower('multi')">
         <div class="character-icon">🏹</div>
-        <div>Múltiplos tiros</div>
-        <div class="power-description">Dispara 5 flechas de uma vez</div>
+        <div>CHUVA DE FLECHAS</div>
+        <div class="power-description">Dispara 7 flechas em um leque amplo para cobrir mais área</div>
       </div>
       <div class="power-option" onclick="selectPower('freeze')">
-        <div class="character-icon">🥶</div>
-        <div>Congelante</div>
-        <div class="power-description">Congela os inimigos e os desacelera por um período de tempo</div>
+        <div class="character-icon">❄️</div>
+        <div>CONGELAMENTO</div>
+        <div class="power-description">Congela todos os inimigos na tela por 5 segundos</div>
       </div>
       <div class="power-option" onclick="selectPower('lightning')">
-       <div class="character-icon">🌩️</div>
-        <div>Relâmpago</div>
-        <div class="power-description">Eletrocuta os inimigos, dando dano em cadeia mas diminuindo o dano</div>
+       <div class="character-icon">⚡</div>
+        <div>RELÂMPAGO</div>
+        <div class="power-description">Eletrocuta até 8 inimigos, com dano que diminui a cada pulo</div>
       </div>
       <div class="power-option" onclick="selectPower('shield')">
-        <div class="character-icon">🛡️</div>
-        <div>Escudo</div>
-        <div class="power-description">Ganha um escudo de invencibilidade temporária</div>
+        <div class="character-icon">🔰</div>
+        <div>ESCUDO CÓSMICO</div>
+        <div class="power-description">Cria um escudo que te torna invulnerável por 6 segundos</div>
       </div>
     </div>
-    <button onclick="startGame()">Começar Jogo</button>
+    <button onclick="startGame()">COMEÇAR JOGO</button>
+    
+    <div id="controls">
+      <h3>CONTROLES</h3>
+      <p>WASD - Movimento | Mouse - Mirar e Atirar | E - Habilidade Especial</p>
+      <p>Colete power-ups para ganhar vantagens durante a batalha!</p>
+    </div>
   </div>
   
-  <canvas id="gameCanvas" width="800" height="600"></canvas>
+  <canvas id="gameCanvas" width="900" height="650"></canvas>
   
-  <div id="wave-display" style="display: none;">Wave: 1</div>
+  <div id="wave-display" style="display: none;">WAVE: 1</div>
   
   <div id="victory-screen">
-    <h1>VITÓRIA!</h1>
-    <p>Você derrotou todos os inimigos e se tornou o Arqueiro Lendário!</p>
-    <button onclick="backToMenu()">Testar Outros Poderes</button>
+    <h1>VITÓRIA LENDÁRIA!</h1>
+    <p>Você provou ser capaz de superar seus limites, agora teste outros poderes!</p>
+    <button onclick="backToMenu()">JOGAR NOVAMENTE</button>
   </div>
   
   <script>
+ 
+    function createMenuParticles() {
+      const colors = ['#00ff88', '#00ffff', '#ff00ff', '#ffff00'];
+      for (let i = 0; i < 50; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+        
+        const size = Math.random() * 5 + 2;
+        particle.style.width = `${size}px`;
+        particle.style.height = `${size}px`;
+        
+        particle.style.left = `${Math.random() * 100}%`;
+        particle.style.top = `${Math.random() * 100}%`;
+        particle.style.opacity = Math.random() * 0.5 + 0.1;
+        particle.style.background = colors[Math.floor(Math.random() * colors.length)];
+        
+        document.body.appendChild(particle);
+        
+        
+        setInterval(() => {
+          particle.style.transform = `translate(${Math.random() * 20 - 10}px, ${Math.random() * 20 - 10}px)`;
+        }, Math.random() * 2000 + 1000);
+      }
+    }
+    
+    function simulateLoading() {
+      let progress = 0;
+      const loadingInterval = setInterval(() => {
+        progress += Math.random() * 10 + 5;
+        if (progress >= 100) {
+          progress = 100;
+          clearInterval(loadingInterval);
+          setTimeout(() => {
+            document.getElementById('loading-screen').style.display = 'none';
+            createMenuParticles();
+          }, 500);
+        }
+        document.getElementById('loading-progress').style.width = `${progress}%`;
+        document.getElementById('loading-text').textContent = 
+          progress < 30 ? "Carregando recursos..." :
+          progress < 70 ? "Preparando inimigos..." :
+          "Quase lá...";
+      }, 200);
+    }
+    
+    simulateLoading();
+
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
     const waveDisplay = document.getElementById('wave-display');
@@ -199,6 +353,25 @@
     let keys = {}, mouse = { x: 0, y: 0, clicked: false };
     let selectedSpecial = 'explosive';
     let gameActive = false;
+    let score = 0;
+    let highScore = localStorage.getItem('highScore') || 0;
+
+    const sounds = {
+      shoot: new Audio('data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU...'),
+      explosion: new Audio('data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU...'),
+      freeze: new Audio('data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU...'),
+      lightning: new Audio('data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU...'),
+      shield: new Audio('data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU...'),
+      powerup: new Audio('data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU...'),
+      enemyHit: new Audio('data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU...'),
+      playerHit: new Audio('data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU...'),
+      victory: new Audio('data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU...'),
+      gameOver: new Audio('data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU...')
+    };
+
+    Object.values(sounds).forEach(sound => {
+      sound.volume = 0.3;
+    });
 
     document.addEventListener('keydown', e => keys[e.code] = true);
     document.addEventListener('keyup', e => keys[e.code] = false);
@@ -216,6 +389,7 @@
         opt.classList.remove('selected');
       });
       event.currentTarget.classList.add('selected');
+      sounds.powerup.play();
     }
 
     function startGame() {
@@ -223,6 +397,7 @@
       canvas.style.display = 'block';
       waveDisplay.style.display = 'block';
       gameActive = true;
+      score = 0;
       init();
     }
 
@@ -238,20 +413,26 @@
       constructor() {
         this.x = canvas.width / 2;
         this.y = canvas.height / 2;
-        this.speed = 4;
-        this.radius = 20;
-        this.health = 100;
-        this.maxHealth = 100;
+        this.speed = 5;
+        this.radius = 25;
+        this.health = 150;
+        this.maxHealth = 150;
         this.shootCooldown = 0;
         this.specialCooldown = 0;
         this.shieldActive = false;
         this.shieldTimer = 0;
         this.slowTimer = 0;
         this.originalSpeed = this.speed;
+        this.dashCooldown = 0;
+        this.dashing = false;
+        this.dashTimer = 0;
+        this.invulnerable = false;
+        this.kills = 0;
+        this.combo = 0;
+        this.comboTimer = 0;
       }
 
       update() {
-        // Aplica slow se necessário
         if (this.slowTimer > 0) {
           this.slowTimer--;
           this.speed = this.originalSpeed * 0.5;
@@ -259,25 +440,52 @@
           this.speed = this.originalSpeed;
         }
 
+        if (keys["Space"] && this.dashCooldown <= 0 && !this.dashing) {
+          this.dashing = true;
+          this.dashTimer = 15;
+          this.dashCooldown = 120;
+          this.invulnerable = true;
+          this.speed *= 3;
+          sounds.shield.play();
+        }
+
+        if (this.dashing) {
+          this.dashTimer--;
+          if (this.dashTimer <= 0) {
+            this.dashing = false;
+            this.invulnerable = false;
+            this.speed = this.originalSpeed;
+          }
+        }
+
+        if (this.dashCooldown > 0) this.dashCooldown--;
+
         if (keys["KeyW"]) this.y -= this.speed;
         if (keys["KeyS"]) this.y += this.speed;
         if (keys["KeyA"]) this.x -= this.speed;
         if (keys["KeyD"]) this.x += this.speed;
+        
         this.x = Math.max(this.radius, Math.min(canvas.width - this.radius, this.x));
         this.y = Math.max(this.radius, Math.min(canvas.height - this.radius, this.y));
 
         if (mouse.clicked && this.shootCooldown <= 0) {
           const angle = Math.atan2(mouse.y - this.y, mouse.x - this.x);
           arrows.push(new Arrow(this.x, this.y, angle));
-          this.shootCooldown = 15;
+          this.shootCooldown = 10;
+          sounds.shoot.play();
+          
+          this.combo++;
+          this.comboTimer = 20; 
         }
 
         if (this.shootCooldown > 0) this.shootCooldown--;
         if (this.specialCooldown > 0) this.specialCooldown--;
+        if (this.comboTimer > 0) this.comboTimer--;
 
+       
         if (keys["KeyE"] && this.specialCooldown <= 0) {
           useSpecial(this);
-          this.specialCooldown = 600;
+          this.specialCooldown = 500; 
         }
 
         if (this.shieldActive) {
@@ -294,32 +502,76 @@
         const angle = Math.atan2(mouse.y - this.y, mouse.x - this.x);
         ctx.rotate(angle);
         
-        // Desenha escudo se ativo
-        if (this.shieldActive) {
+        if (this.dashing) {
           ctx.beginPath();
-          ctx.arc(0, 0, this.radius + 10, 0, Math.PI * 2);
-          ctx.strokeStyle = 'rgba(0, 150, 255, 0.7)';
-          ctx.lineWidth = 3;
-          ctx.stroke();
+          ctx.arc(0, 0, this.radius + 5, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(0, 200, 255, 0.3)';
+          ctx.fill();
         }
         
-        // Corpo do jogador
-        ctx.fillStyle = "#4CAF50";
+        if (this.shieldActive) {
+          ctx.beginPath();
+          ctx.arc(0, 0, this.radius + 15, 0, Math.PI * 2);
+          ctx.strokeStyle = 'rgba(0, 150, 255, 0.7)';
+          ctx.lineWidth = 4;
+          ctx.stroke();
+          
+          for (let i = 0; i < 8; i++) {
+            const shieldAngle = (Date.now() / 200 + i * Math.PI / 4) % (Math.PI * 2);
+            ctx.beginPath();
+            ctx.arc(
+              Math.cos(shieldAngle) * (this.radius + 10),
+              Math.sin(shieldAngle) * (this.radius + 10),
+              3, 0, Math.PI * 2
+            );
+            ctx.fillStyle = 'rgba(0, 200, 255, 0.8)';
+            ctx.fill();
+          }
+        }
+        
+        ctx.fillStyle = this.invulnerable ? "#00ffff" : "#00ff88";
         ctx.beginPath();
         ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
         ctx.fill();
         
-        // Arco
         ctx.fillStyle = "#8B4513";
-        ctx.fillRect(0, -5, 30, 10);
+        ctx.fillRect(0, -7, 40, 14);
         
-        // Detalhes
-        ctx.fillStyle = "#45a049";
+        ctx.fillStyle = this.invulnerable ? "#00aaff" : "#00aa77";
         ctx.beginPath();
-        ctx.arc(0, 0, this.radius - 5, 0, Math.PI * 2);
+        ctx.arc(0, 0, this.radius - 8, 0, Math.PI * 2);
+        ctx.fill();
+        
+        ctx.fillStyle = "white";
+        ctx.beginPath();
+        ctx.arc(10, -8, 5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(10, 8, 5, 0, Math.PI * 2);
+        ctx.fill();
+        
+        ctx.fillStyle = "black";
+        ctx.beginPath();
+        ctx.arc(12, -8, 2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(12, 8, 2, 0, Math.PI * 2);
         ctx.fill();
         
         ctx.restore();
+      }
+      
+      takeDamage(amount) {
+        if (!this.shieldActive && !this.invulnerable) {
+          this.health -= amount;
+          sounds.playerHit.play();
+          
+          this.combo = 0;
+          this.comboTimer = 0;
+          
+          ctx.fillStyle = 'rgba(255, 0, 0, 0.5)';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
       }
     }
 
@@ -328,12 +580,21 @@
         this.x = x;
         this.y = y;
         this.angle = angle;
-        this.speed = 8;
+        this.speed = 12;
         this.dx = Math.cos(angle) * this.speed;
         this.dy = Math.sin(angle) * this.speed;
         this.alive = true;
         this.specialEffect = specialEffect;
-        this.lifetime = 100;
+        this.lifetime = 120;
+        this.damage = 25;
+        this.pierce = 0;
+        
+        if (specialEffect === 'lightning') {
+          this.damage = 40;
+          this.pierce = 2;
+        } else if (specialEffect === 'explosive') {
+          this.damage = 35;
+        }
       }
 
       update() {
@@ -343,6 +604,10 @@
         
         if (this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height || this.lifetime <= 0) {
           this.alive = false;
+          
+          if (this.specialEffect === 'explosive') {
+            explosions.push(new Explosion(this.x, this.y, 60));
+          }
         }
       }
 
@@ -352,48 +617,85 @@
         ctx.rotate(this.angle);
         
         if (this.specialEffect === 'lightning') {
+          // Lightning arrow
           ctx.fillStyle = "gold";
           ctx.strokeStyle = "white";
           ctx.lineWidth = 2;
           ctx.beginPath();
           ctx.moveTo(0, 0);
-          ctx.lineTo(20, 0);
+          ctx.lineTo(25, 0);
           ctx.stroke();
           
-          // Efeito de relâmpago
-          for (let i = 0; i < 5; i++) {
-            const offset = Math.random() * 4 - 2;
+          for (let i = 0; i < 6; i++) {
+            const offset = Math.random() * 6 - 3;
             ctx.beginPath();
             ctx.moveTo(i * 4, offset);
-            ctx.lineTo((i + 1) * 4, offset + (Math.random() * 4 - 2));
+            ctx.lineTo((i + 1) * 4, offset + (Math.random() * 6 - 3));
             ctx.strokeStyle = "cyan";
             ctx.stroke();
           }
+          
+          ctx.beginPath();
+          ctx.arc(0, 0, 10, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(255, 255, 150, 0.3)';
+          ctx.fill();
+        } else if (this.specialEffect === 'explosive') {
+          const gradient = ctx.createLinearGradient(0, -5, 25, 0);
+          gradient.addColorStop(0, 'red');
+          gradient.addColorStop(0.5, 'orange');
+          gradient.addColorStop(1, 'yellow');
+          
+          ctx.fillStyle = gradient;
+          ctx.fillRect(0, -4, 25, 8);
+          
+          ctx.beginPath();
+          ctx.arc(25, 0, 5, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(255, 100, 0, 0.7)';
+          ctx.fill();
         } else {
-          ctx.fillStyle = this.specialEffect ? "gold" : "white";
-          ctx.fillRect(0, -2, 20, 4);
+          const gradient = ctx.createLinearGradient(0, -3, 25, 0);
+          gradient.addColorStop(0, '#00ff88');
+          gradient.addColorStop(1, '#00ffff');
+          
+          ctx.fillStyle = gradient;
+          ctx.fillRect(0, -3, 25, 6);
+          
+          ctx.beginPath();
+          ctx.moveTo(25, 0);
+          ctx.lineTo(20, -4);
+          ctx.lineTo(20, 4);
+          ctx.closePath();
+          ctx.fillStyle = 'silver';
+          ctx.fill();
+          
+          ctx.fillStyle = '#ff00ff';
+          ctx.beginPath();
+          ctx.moveTo(0, -3);
+          ctx.lineTo(-5, -6);
+          ctx.lineTo(-5, 0);
+          ctx.closePath();
+          ctx.fill();
+          
+          ctx.fillStyle = '#00ffff';
+          ctx.beginPath();
+          ctx.moveTo(0, 3);
+          ctx.lineTo(-5, 6);
+          ctx.lineTo(-5, 0);
+          ctx.closePath();
+          ctx.fill();
         }
         
         ctx.restore();
       }
     }
 
-    // Tipos de inimigos:
-    // 1 - Básico (fraco)
-    // 2 - Resistente (mais vida)
-    // 3 - Rápido (veloz)
-    // 4 - Tanque (muita vida, lento)
-    // 5 - Atirador (ataca à distância)
-    // 6 - Boss normal (wave 5)
-    // 7 - Boss intermediário (wave 10)
-    // 8 - Boss final (wave 15)
+    
 
     class Enemy {
       constructor(type = 1, wave = 1) {
         this.type = type;
         this.wave = wave;
         
-        // Posição inicial aleatória nas bordas
         if (Math.random() < 0.5) {
           this.x = Math.random() < 0.5 ? 0 : canvas.width;
           this.y = Math.random() * canvas.height;
@@ -402,154 +704,164 @@
           this.y = Math.random() < 0.5 ? 0 : canvas.height;
         }
         
-        // Ajusta atributos baseados no tipo
         switch(type) {
-          case 1: // Básico
-            this.radius = 15;
-            this.speed = 2 + wave * 0.05;
-            this.health = 30 + wave * 2;
-            this.color = "red";
-            this.damage = 0.3;
-            break;
-          case 2: // Resistente
-            this.radius = 20;
-            this.speed = 1.5 + wave * 0.03;
-            this.health = 80 + wave * 4;
-            this.color = "darkred";
-            this.damage = 0.5;
-            break;
-          case 3: // Rápido
-            this.radius = 12;
-            this.speed = 3.5 + wave * 0.07;
-            this.health = 20 + wave * 1.5;
-            this.color = "orange";
-            this.damage = 0.2;
-            break;
-          case 4: // Tanque
-            this.radius = 25;
-            this.speed = 1 + wave * 0.02;
-            this.health = 150 + wave * 8;
-            this.color = "brown";
-            this.damage = 0.8;
-            break;
-          case 5: // Atirador
+          case 1:
             this.radius = 18;
-            this.speed = 1.8 + wave * 0.04;
-            this.health = 50 + wave * 3;
-            this.color = "purple";
-            this.damage = 0.4;
-            this.shootCooldown = 0;
+            this.speed = 2.5 + wave * 0.07;
+            this.health = 40 + wave * 3;
+            this.color = "#ff5555";
+            this.damage = 0.5;
+            this.scoreValue = 10;
             break;
-          case 6: // Boss wave 5
-            this.radius = 40;
-            this.speed = player.speed * 0.8; // 80% da velocidade do jogador
-            this.health = 400 + wave * 30;
-            this.color = "darkviolet";
-            this.damage = 1.5;
+          case 2: 
+            this.radius = 22;
+            this.speed = 2 + wave * 0.05;
+            this.health = 100 + wave * 6;
+            this.color = "#aa0000";
+            this.damage = 0.8;
+            this.scoreValue = 25;
+            break;
+          case 3: 
+            this.radius = 15;
+            this.speed = 4 + wave * 0.1;
+            this.health = 30 + wave * 2;
+            this.color = "#ffaa00";
+            this.damage = 0.3;
+            this.scoreValue = 15;
+            break;
+          case 4: 
+            this.radius = 30;
+            this.speed = 1.2 + wave * 0.03;
+            this.health = 200 + wave * 10;
+            this.color = "#5555ff";
+            this.damage = 1.2;
+            this.scoreValue = 40;
+            break;
+          case 5:
+            this.radius = 20;
+            this.speed = 2 + wave * 0.06;
+            this.health = 70 + wave * 4;
+            this.color = "#aa00aa";
+            this.damage = 0.6;
+            this.shootCooldown = 0;
+            this.scoreValue = 30;
+            break;
+          case 6: // Wave 5 Boss
+            this.radius = 45;
+            this.speed = player.speed * 0.85;
+            this.health = 500 + wave * 40;
+            this.color = "#ff00ff";
+            this.damage = 2;
             this.shootCooldown = 0;
             this.fireTrailCooldown = 0;
             this.fireTrails = [];
+            this.scoreValue = 200;
             break;
-          case 7: // Boss wave 10
-            this.radius = 40;
-            this.speed = player.speed * 0.95; // 95% da velocidade do jogador
-            this.health = (400 + wave * 30) * 1.3; // 30% mais vida que o boss da wave 5
-            this.color = "yellow";
-            this.damage = 1.5;
+          case 7: // Wave 10 Boss
+            this.radius = 45;
+            this.speed = player.speed * 0.95;
+            this.health = (500 + wave * 40) * 1.4;
+            this.color = "#ffff00";
+            this.damage = 2;
             this.shootCooldown = 0;
             this.specialCooldown = 0;
+            this.scoreValue = 400;
             break;
-          case 8: // Boss final wave 15
-            this.radius = 60; // Um pouco maior
-            this.speed = player.speed * 0.8; // 80% da velocidade do jogador
-            this.health = (400 + wave * 30) * 1.6; // 60% mais vida que o boss da wave 5
-            this.color = "orange";
-            this.damage = 2;
+          case 8: // Final Boss
+            this.radius = 70;
+            this.speed = player.speed * 0.8;
+            this.health = (500 + wave * 40) * 2;
+            this.color = "#ff4500";
+            this.damage = 3;
             this.shootCooldown = 0;
             this.minionCooldown = 0;
             this.phase = 1;
             this.auraActive = false;
+            this.scoreValue = 1000;
             break;
         }
         
         this.maxHealth = this.health;
         this.originalSpeed = this.speed;
+        this.slowTimer = 0;
+        this.hitFlash = 0;
       }
 
       update() {
-        // Movimento diferente para atiradores e bosses
+        if (this.slowTimer > 0) {
+          this.slowTimer--;
+          this.speed = this.originalSpeed * 0.3;
+        } else {
+          this.speed = this.originalSpeed;
+        }
+        
+        if (this.hitFlash > 0) this.hitFlash--;
+
         if (this.type === 5 || this.type === 6 || this.type === 7 || this.type === 8) {
-          // Todos os bosses agora se movem em direção ao jogador
           const angle = Math.atan2(player.y - this.y, player.x - this.x);
           this.x += Math.cos(angle) * this.speed;
           this.y += Math.sin(angle) * this.speed;
           
-          // Comportamento específico para cada tipo de boss
-          if (this.type === 6) { // Boss wave 5 - Rastro de fogo
+          if (this.type === 6) { 
             this.fireTrailCooldown--;
             if (this.fireTrailCooldown <= 0) {
               this.fireTrails.push(new FireTrail(this.x, this.y));
-              this.fireTrailCooldown = 60; // 1 segundo
+              this.fireTrailCooldown = 50; 
             }
             
-            // Atira no jogador mais rápido
             if (this.shootCooldown <= 0) {
               const shootAngle = Math.atan2(player.y - this.y, player.x - this.x);
               enemyProjectiles.push(new EnemyProjectile(this.x, this.y, shootAngle, this.type));
-              this.shootCooldown = 45; // Cooldown menor para atirar mais rápido
+              this.shootCooldown = 40;
             }
           }
-          else if (this.type === 7) { // Boss wave 10 - Tiros em leque e esferas de energia
+          else if (this.type === 7) {
             if (this.shootCooldown <= 0) {
               const shootAngle = Math.atan2(player.y - this.y, player.x - this.x);
-              // Dispara 3 tiros em leque
               for (let i = -1; i <= 1; i++) {
                 enemyProjectiles.push(new EnemyProjectile(this.x, this.y, shootAngle + (i * 0.3), this.type));
               }
-              this.shootCooldown = 90;
+              this.shootCooldown = 80;
             }
             
-            // Esferas de energia a cada 5 segundos
             this.specialCooldown--;
             if (this.specialCooldown <= 0) {
-              for (let i = 0; i < 30; i++) {
-                const angle = (i / 30) * Math.PI * 2;
+              for (let i = 0; i < 36; i++) {
+                const angle = (i / 36) * Math.PI * 2;
                 enemyProjectiles.push(new EnemyProjectile(this.x, this.y, angle, 'energy'));
               }
-              this.specialCooldown = 300; // 5 segundos
+              this.specialCooldown = 300;
             }
           }
-          else if (this.type === 8) { // Boss final - Minions e fase 2
-            // Fase 2 quando chega a 50% de vida
+          else if (this.type === 8) { 
             if (this.health < this.maxHealth / 2 && this.phase === 1) {
               this.phase = 2;
-              this.color = "red";
-              this.damage *= 1.4; // 40% mais dano
+              this.color = "#ff0000";
+              this.damage *= 1.5;
               this.auraActive = true;
+              this.speed *= 1.2;
             }
             
-            // Spawn de minions
             this.minionCooldown--;
-            const minionInterval = this.phase === 1 ? 240 : 150; // 4s ou 2.5s
+            const minionInterval = this.phase === 1 ? 200 : 120; // 3.3s or 2s
             if (this.minionCooldown <= 0) {
-              enemies.push(new Enemy(1, this.wave + 5)); // Minion mais forte que inimigo normal
+              enemies.push(new Enemy(1, this.wave + 5));
+              enemies.push(new Enemy(3, this.wave + 5));
               this.minionCooldown = minionInterval;
             }
             
-            // Ataques
             if (this.shootCooldown <= 0) {
               const shootAngle = Math.atan2(player.y - this.y, player.x - this.x);
-              // Padrão de tiro especial
-              for (let i = 0; i < 8; i++) {
-                enemyProjectiles.push(new EnemyProjectile(this.x, this.y, shootAngle + (i * Math.PI / 4), this.type));
+              for (let i = 0; i < 12; i++) {
+                enemyProjectiles.push(new EnemyProjectile(this.x, this.y, shootAngle + (i * Math.PI / 6), this.type));
               }
-              this.shootCooldown = 60; // Cooldown menor
+              this.shootCooldown = 50;
             }
           }
           
           if (this.shootCooldown > 0) this.shootCooldown--;
         } else {
-          // Movimento padrão em direção ao jogador para inimigos normais
+          // Standard movement towards player for normal enemies
           const angle = Math.atan2(player.y - this.y, player.x - this.x);
           this.x += Math.cos(angle) * this.speed;
           this.y += Math.sin(angle) * this.speed;
@@ -557,87 +869,106 @@
       }
 
       draw() {
-        // Corpo do inimigo
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        
+        if (this.hitFlash > 0) {
+          ctx.fillStyle = "white";
+          ctx.beginPath();
+          ctx.arc(0, 0, this.radius + 5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        
         ctx.fillStyle = this.color;
         ctx.beginPath();
-        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
         ctx.fill();
         
-        // Detalhes baseados no tipo
         switch(this.type) {
-          case 2: // Resistente
-            ctx.fillStyle = "black";
+          case 2: // armadurado
+            ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
             ctx.beginPath();
-            ctx.arc(this.x, this.y, this.radius - 5, 0, Math.PI * 2);
+            ctx.arc(0, 0, this.radius - 8, 0, Math.PI * 2);
             ctx.fill();
             break;
-          case 3: // Rápido
+          case 3: // rapido
             ctx.strokeStyle = "yellow";
-            ctx.lineWidth = 2;
+            ctx.lineWidth = 3;
             ctx.beginPath();
-            ctx.arc(this.x, this.y, this.radius + 3, 0, Math.PI * 2);
+            ctx.arc(0, 0, this.radius + 5, 0, Math.PI * 2);
             ctx.stroke();
             break;
-          case 4: // Tanque
-            ctx.fillStyle = "darkgray";
+          case 4: // tank
+            ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
             ctx.beginPath();
-            ctx.arc(this.x, this.y, this.radius - 5, 0, Math.PI * 2);
+            ctx.arc(0, 0, this.radius - 10, 0, Math.PI * 2);
             ctx.fill();
             break;
-          case 5: // Atirador
+          case 5: // atirador "tem que arruma o tiro fdp"
             ctx.fillStyle = "white";
             ctx.beginPath();
-            ctx.arc(this.x, this.y, 5, 0, Math.PI * 2);
+            ctx.arc(0, 0, 8, 0, Math.PI * 2);
             ctx.fill();
             break;
-          case 6: // Boss wave 5
-          case 7: // Boss wave 10
-          case 8: // Boss final
-            // Olhos
+          case 6: // Wave 5 Boss
+          case 7: // Wave 10 Boss
+          case 8: // boss final
             const angle = Math.atan2(player.y - this.y, player.x - this.x);
-            ctx.save();
-            ctx.translate(this.x, this.y);
             ctx.rotate(angle);
             
             ctx.fillStyle = "yellow";
             ctx.beginPath();
-            ctx.arc(10, -5, 5, 0, Math.PI * 2);
+            ctx.arc(15, -10, 8, 0, Math.PI * 2);
             ctx.fill();
             ctx.beginPath();
-            ctx.arc(10, 5, 5, 0, Math.PI * 2);
+            ctx.arc(15, 10, 8, 0, Math.PI * 2);
             ctx.fill();
             
-            ctx.restore();
-            
-            // Barra de vida
-            ctx.fillStyle = "white";
-            ctx.fillRect(this.x - this.radius, this.y - this.radius - 15, this.radius * 2, 5);
             ctx.fillStyle = "red";
-            ctx.fillRect(this.x - this.radius, this.y - this.radius - 15, this.radius * 2 * (this.health / this.maxHealth), 5);
+            ctx.beginPath();
+            ctx.arc(18, -10, 4, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(18, 10, 4, 0, Math.PI * 2);
+            ctx.fill();
             
-            // Texto do boss
-            ctx.fillStyle = "white";
-            ctx.font = "16px Arial";
-            if (this.type === 6) {
-              ctx.fillText("BOSS", this.x - 20, this.y - this.radius - 25);
-            } else if (this.type === 7) {
-              ctx.fillText("BOSS AMARELO", this.x - 50, this.y - this.radius - 25);
-            } else if (this.type === 8) {
-              ctx.fillText("BOSS FINAL", this.x - 40, this.y - this.radius - 25);
-              
-              // Aura vermelha na fase 2
-              if (this.auraActive) {
-                ctx.strokeStyle = "rgba(255, 0, 0, 0.5)";
-                ctx.lineWidth = 5;
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.radius + 15, 0, Math.PI * 2);
-                ctx.stroke();
-              }
-            }
-            break;
+            ctx.fillStyle = "black";
+            ctx.beginPath();
+            ctx.arc(10, 0, 5, 0, Math.PI);
+            ctx.fill();
         }
         
-        // Desenha rastro de fogo do boss wave 5
+        ctx.restore();
+        
+        if (this.type === 6 || this.type === 7 || this.type === 8) {
+          ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
+          ctx.fillRect(this.x - this.radius, this.y - this.radius - 20, this.radius * 2, 8);
+          ctx.fillStyle = this.health > this.maxHealth / 2 ? "lime" : "red";
+          ctx.fillRect(this.x - this.radius, this.y - this.radius - 20, this.radius * 2 * (this.health / this.maxHealth), 8);
+          ctx.strokeStyle = "white";
+          ctx.strokeRect(this.x - this.radius, this.y - this.radius - 20, this.radius * 2, 8);
+          
+          ctx.fillStyle = "white";
+          ctx.font = "18px 'Press Start 2P', cursive";
+          ctx.textAlign = "center";
+          if (this.type === 6) {
+            ctx.fillText("BOSS VIOLETA", this.x, this.y - this.radius - 35);
+          } else if (this.type === 7) {
+            ctx.fillText("BOSS DOURADO", this.x, this.y - this.radius - 35);
+          } else if (this.type === 8) {
+            ctx.fillText("BOSS FINAL", this.x, this.y - this.radius - 35);
+            
+            if (this.auraActive) {
+              ctx.strokeStyle = "rgba(255, 0, 0, 0.5)";
+              ctx.lineWidth = 8;
+              ctx.beginPath();
+              ctx.arc(this.x, this.y, this.radius + 25, 0, Math.PI * 2);
+              ctx.stroke();
+            }
+          }
+          ctx.textAlign = "start";
+        }
+        
         if (this.type === 6) {
           this.fireTrails = this.fireTrails.filter(trail => trail.lifetime > 0);
           this.fireTrails.forEach(trail => {
@@ -646,18 +977,26 @@
           });
         }
       }
+      
+      takeDamage(amount) {
+        this.health -= amount;
+        this.hitFlash = 3;
+        sounds.enemyHit.play();
+      }
     }
 
     class FireTrail {
       constructor(x, y) {
         this.x = x;
         this.y = y;
-        this.radius = 50;
-        this.lifetime = 300; // 2 segundos
+        this.radius = 60;
+        this.lifetime = 240; 
+        this.damage = 0.8;
       }
       
       update() {
         this.lifetime--;
+        this.radius = 60 * (this.lifetime / 240);
       }
       
       draw() {
@@ -665,7 +1004,7 @@
           this.x, this.y, 0,
           this.x, this.y, this.radius
         );
-        gradient.addColorStop(0, 'rgba(255, 100, 0, 0.8)');
+        gradient.addColorStop(0, 'rgba(255, 150, 0, 0.8)');
         gradient.addColorStop(0.7, 'rgba(255, 50, 0, 0.4)');
         gradient.addColorStop(1, 'rgba(255, 0, 0, 0)');
         
@@ -674,10 +1013,9 @@
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
         ctx.fill();
         
-        // Colisão com jogador
         if (Math.hypot(player.x - this.x, player.y - this.y) < player.radius + this.radius) {
-          if (!player.shieldActive) {
-            player.health -= 0.5; // Dano contínuo
+          if (!player.shieldActive && !player.invulnerable) {
+            player.takeDamage(this.damage);
           }
         }
       }
@@ -691,23 +1029,33 @@
         this.enemyType = enemyType;
         
         if (enemyType === 'energy') {
-          this.speed = 3;
-          this.damage = 20;
-          this.radius = 8;
+          this.speed = 3.5;
+          this.damage = 25;
+          this.radius = 10;
           this.color = "cyan";
           this.isEnergyBall = true;
+          this.homing = false;
         } else {
-          this.speed = enemyType === 7 ? 5 : enemyType === 6 ? 6 : 4;
-          this.damage = enemyType === 7 ? 7 : enemyType === 6 ? 10 : 5;
-          this.radius = enemyType === 7 ? 6 : enemyType === 6 ? 8 : 5;
+          this.speed = enemyType === 7 ? 6 : enemyType === 6 ? 7 : 5;
+          this.damage = enemyType === 7 ? 10 : enemyType === 6 ? 15 : 8;
+          this.radius = enemyType === 7 ? 8 : enemyType === 6 ? 10 : 6;
           this.color = enemyType === 7 ? "yellow" : enemyType === 6 ? "purple" : "orange";
           this.isEnergyBall = false;
+          this.homing = enemyType === 8;
         }
         
         this.alive = true;
+        this.homingPower = 0.05;
       }
 
       update() {
+       
+        if (this.homing) {
+          const targetAngle = Math.atan2(player.y - this.y, player.x - this.x);
+          const angleDiff = ((targetAngle - this.angle + 3 * Math.PI) % (2 * Math.PI)) - Math.PI;
+          this.angle += Math.min(this.homingPower, Math.max(-this.homingPower, angleDiff));
+        }
+        
         this.x += Math.cos(this.angle) * this.speed;
         this.y += Math.sin(this.angle) * this.speed;
         
@@ -717,16 +1065,39 @@
       }
 
       draw() {
-        ctx.fillStyle = this.color;
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-        ctx.fill();
-        
         if (this.isEnergyBall) {
-          ctx.strokeStyle = "white";
-          ctx.lineWidth = 1;
+          ctx.fillStyle = this.color;
           ctx.beginPath();
-          ctx.arc(this.x, this.y, this.radius + 2, 0, Math.PI * 2);
+          ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+          ctx.fill();
+          
+          ctx.strokeStyle = "white";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.radius + 3, 0, Math.PI * 2);
+          ctx.stroke();
+          
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.radius + 10, 0, Math.PI * 2);
+          const gradient = ctx.createRadialGradient(
+            this.x, this.y, 0,
+            this.x, this.y, this.radius + 10
+          );
+          gradient.addColorStop(0, 'rgba(0, 255, 255, 0.5)');
+          gradient.addColorStop(1, 'rgba(0, 255, 255, 0)');
+          ctx.fillStyle = gradient;
+          ctx.fill();
+        } else {
+          ctx.fillStyle = this.color;
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+          ctx.fill();
+          
+          ctx.strokeStyle = this.color;
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(this.x - Math.cos(this.angle) * 15, this.y - Math.sin(this.angle) * 15);
+          ctx.lineTo(this.x, this.y);
           ctx.stroke();
         }
       }
@@ -736,69 +1107,115 @@
       constructor(type = null) {
         this.x = Math.random() * (canvas.width - 100) + 50;
         this.y = Math.random() * (canvas.height - 100) + 50;
-        this.radius = 15;
-        this.type = type || (Math.random() < 0.5 ? "heal" : 
-                   Math.random() < 0.7 ? "rapid" : 
-                   Math.random() < 0.85 ? "special" : 
-                   Math.random() < 0.9 ? "shield" : "maxhp");
-        this.lifetime = 600; // 10 segundos
+        this.radius = 20;
+        this.type = type || this.getRandomType();
+        this.lifetime = 600; // 10 seconds
+        this.floatOffset = Math.random() * Math.PI * 2;
+        this.floatSpeed = Math.random() * 0.05 + 0.05;
+        this.originalY = this.y;
+      }
+      
+      getRandomType() {
+        const r = Math.random();
+        if (r < 0.35) return "heal";
+        if (r < 0.6) return "rapid";
+        if (r < 0.8) return "special";
+        if (r < 0.9) return "shield";
+        return "maxhp";
+      }
+
+      update() {
+        this.floatOffset += this.floatSpeed;
+        this.y = this.originalY + Math.sin(this.floatOffset) * 10;
+        this.lifetime--;
       }
 
       draw() {
+        this.update();
+        
         ctx.save();
         ctx.translate(this.x, this.y);
         
-        // Fundo
-        ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
         ctx.beginPath();
-        ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+        ctx.arc(0, 0, this.radius + 5, 0, Math.PI * 2);
+        const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, this.radius + 5);
+        gradient.addColorStop(0, 'rgba(0, 255, 255, 0.3)');
+        gradient.addColorStop(1, 'rgba(0, 255, 255, 0)');
+        ctx.fillStyle = gradient;
         ctx.fill();
         
-        // Ícone
+        ctx.strokeStyle = "cyan";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+        ctx.stroke();
+        
+        ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
+        ctx.beginPath();
+        ctx.arc(0, 0, this.radius - 3, 0, Math.PI * 2);
+        ctx.fill();
+        
         switch(this.type) {
           case "heal":
             ctx.fillStyle = "lime";
             ctx.beginPath();
-            ctx.moveTo(0, -10);
-            ctx.lineTo(7, 7);
-            ctx.lineTo(-7, 7);
+            ctx.moveTo(0, -12);
+            ctx.lineTo(8, 8);
+            ctx.lineTo(-8, 8);
             ctx.closePath();
             ctx.fill();
             break;
           case "rapid":
             ctx.fillStyle = "cyan";
-            ctx.fillRect(-8, -3, 16, 6);
-            ctx.fillRect(-3, -8, 6, 16);
+            ctx.fillRect(-10, -4, 20, 8);
+            ctx.fillRect(-4, -10, 8, 20);
             break;
           case "special":
             ctx.fillStyle = "gold";
             ctx.beginPath();
-            ctx.arc(0, 0, 8, 0, Math.PI * 2);
+            ctx.arc(0, 0, 10, 0, Math.PI * 2);
             ctx.fill();
+            
+            ctx.fillStyle = "rgba(255, 255, 0, 0.7)";
+            for (let i = 0; i < 8; i++) {
+              const angle = (i / 8) * Math.PI * 2;
+              ctx.beginPath();
+              ctx.arc(
+                Math.cos(angle) * 15,
+                Math.sin(angle) * 15,
+                3, 0, Math.PI * 2
+              );
+              ctx.fill();
+            }
             break;
           case "shield":
-            ctx.strokeStyle = "rgba(0, 150, 255, 0.8)";
+            ctx.strokeStyle = "rgba(0, 200, 255, 0.8)";
             ctx.lineWidth = 3;
             ctx.beginPath();
-            ctx.arc(0, 0, 10, 0, Math.PI * 2);
+            ctx.arc(0, 0, 12, 0, Math.PI * 2);
+            ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.moveTo(0, -12);
+            ctx.lineTo(8, 0);
+            ctx.lineTo(0, 8);
+            ctx.lineTo(-8, 0);
+            ctx.closePath();
             ctx.stroke();
             break;
           case "maxhp":
             ctx.fillStyle = "pink";
             ctx.beginPath();
-            ctx.arc(0, -5, 5, 0, Math.PI * 2);
+            ctx.arc(0, -8, 6, 0, Math.PI * 2);
             ctx.fill();
             ctx.beginPath();
-            ctx.arc(0, 5, 5, 0, Math.PI * 2);
+            ctx.arc(0, 8, 6, 0, Math.PI * 2);
             ctx.fill();
-            ctx.fillRect(-5, -2, 10, 10);
+            ctx.fillRect(-6, -2, 12, 12);
             break;
         }
         
         ctx.restore();
-        
-        this.lifetime--;
-        if (this.lifetime <= 0) this.alive = false;
       }
     }
 
@@ -807,62 +1224,66 @@
       
       switch(selectedSpecial) {
         case "explosive":
-          // Explosão que causa dano em área
-          explosions.push(new Explosion(player.x, player.y, 100));
-          enemies.forEach(e => {
+          explosions.push(new Explosion(player.x, player.y, 150));
+          sounds.explosion.play();
+          
+          [...enemies, ...bosses].forEach(e => {
             const dist = Math.hypot(player.x - e.x, player.y - e.y);
-            if (dist < 100) e.health -= 50 + (dist < 50 ? 30 : 0);
-          });
-          bosses.forEach(b => {
-            const dist = Math.hypot(player.x - b.x, player.y - b.y);
-            if (dist < 100) b.health -= 30 + (dist < 50 ? 20 : 0);
+            if (dist < 150) {
+              e.takeDamage(60 + (dist < 75 ? 40 : 0));
+              
+              const knockbackAngle = Math.atan2(e.y - player.y, e.x - player.x);
+              const knockbackPower = 10 * (1 - dist / 150);
+              e.x += Math.cos(knockbackAngle) * knockbackPower;
+              e.y += Math.sin(knockbackAngle) * knockbackPower;
+            }
           });
           break;
           
         case "multi":
-          // Dispara múltiplas flechas
-          for (let i = -2; i <= 2; i++) {
-            arrows.push(new Arrow(player.x, player.y, angle + i * 0.15));
+          sounds.shoot.play();
+          for (let i = -3; i <= 3; i++) {
+            arrows.push(new Arrow(player.x, player.y, angle + i * 0.2));
           }
           break;
           
         case "freeze":
-          // Congela inimigos temporariamente
+          sounds.freeze.play();
           enemies.forEach(e => {
-            e.speed *= 0.2;
-            setTimeout(() => e.speed = e.originalSpeed, 5000);
+            e.speed *= 0.1;
+            e.slowTimer = 300; 
           });
           bosses.forEach(b => {
-            b.speed *= 0.5;
-            setTimeout(() => b.speed = b.originalSpeed, 3000);
+            b.speed *= 0.3;
+            b.slowTimer = 180; 
           });
           freezeEffects.push(new FreezeEffect(player.x, player.y));
           break;
           
         case "lightning":
-          // Relâmpago que salta entre inimigos
+          sounds.lightning.play();
           const lightningTargets = [...enemies, ...bosses].filter(e => 
-            Math.hypot(player.x - e.x, player.y - e.y) < 200
+            Math.hypot(player.x - e.x, player.y - e.y) < 250
           ).sort((a, b) => 
             Math.hypot(player.x - a.x, player.y - a.y) - Math.hypot(player.x - b.x, player.y - b.y)
-          ).slice(0, 5);
+          ).slice(0, 8);
           
           if (lightningTargets.length > 0) {
             lightningEffects.push(new LightningEffect(player, lightningTargets));
             
             lightningTargets.forEach((target, i) => {
-              target.health -= 40 / (i + 1);
+              target.takeDamage(50 / (i + 1));
               if (target.type === 5 || target.type === 6 || target.type === 7 || target.type === 8) {
-                target.shootCooldown += 60; // Atiradores e bosses ficam atordoados
+                target.shootCooldown += 90; 
               }
             });
           }
           break;
           
         case "shield":
-          // Escudo protetor
+          sounds.shield.play();
           player.shieldActive = true;
-          player.shieldTimer = 300; // 5 segundos
+          player.shieldTimer = 360; 
           break;
       }
     }
@@ -886,14 +1307,21 @@
           this.x, this.y, 0,
           this.x, this.y, this.radius
         );
-        gradient.addColorStop(0, 'rgba(255, 200, 0, 0.8)');
-        gradient.addColorStop(0.7, 'rgba(255, 100, 0, 0.4)');
-        gradient.addColorStop(1, 'rgba(255, 50, 0, 0)');
+        gradient.addColorStop(0, 'rgba(255, 255, 0, 0.8)');
+        gradient.addColorStop(0.5, 'rgba(255, 100, 0, 0.6)');
+        gradient.addColorStop(0.8, 'rgba(255, 50, 0, 0.3)');
+        gradient.addColorStop(1, 'rgba(255, 0, 0, 0)');
         
         ctx.fillStyle = gradient;
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
         ctx.fill();
+        
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius * 0.7, 0, Math.PI * 2);
+        ctx.stroke();
       }
     }
 
@@ -901,7 +1329,7 @@
       constructor(x, y) {
         this.x = x;
         this.y = y;
-        this.radius = 200;
+        this.radius = 300;
         this.lifetime = 60;
       }
       
@@ -910,11 +1338,41 @@
       }
       
       draw() {
-        ctx.strokeStyle = `rgba(0, 200, 255, ${this.lifetime / 60})`;
-        ctx.lineWidth = 3;
+        const gradient = ctx.createRadialGradient(
+          this.x, this.y, 0,
+          this.x, this.y, this.radius
+        );
+        gradient.addColorStop(0, 'rgba(0, 200, 255, 0.1)');
+        gradient.addColorStop(1, 'rgba(0, 100, 255, 0)');
+        
+        ctx.fillStyle = gradient;
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-        ctx.stroke();
+        ctx.fill();
+        
+        for (let i = 0; i < 20; i++) {
+          const angle = Math.random() * Math.PI * 2;
+          const dist = Math.random() * this.radius;
+          const size = Math.random() * 10 + 5;
+          
+          ctx.save();
+          ctx.translate(
+            this.x + Math.cos(angle) * dist,
+            this.y + Math.sin(angle) * dist
+          );
+          ctx.rotate(Math.random() * Math.PI * 2);
+          
+          ctx.fillStyle = 'rgba(200, 240, 255, 0.8)';
+          ctx.beginPath();
+          ctx.moveTo(0, -size/2);
+          ctx.lineTo(size/3, 0);
+          ctx.lineTo(0, size/2);
+          ctx.lineTo(-size/3, 0);
+          ctx.closePath();
+          ctx.fill();
+          
+          ctx.restore();
+        }
       }
     }
 
@@ -922,15 +1380,17 @@
       constructor(source, targets) {
         this.source = source;
         this.targets = targets;
-        this.lifetime = 10;
+        this.lifetime = 15;
       }
       
       draw() {
         if (this.lifetime <= 0) return;
         this.lifetime--;
         
-        ctx.strokeStyle = `rgba(0, 200, 255, ${this.lifetime / 10})`;
-        ctx.lineWidth = 2;
+        ctx.strokeStyle = `rgba(0, 200, 255, ${this.lifetime / 15})`;
+        ctx.lineWidth = 3;
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = 'cyan';
         
         let lastX = this.source.x;
         let lastY = this.source.y;
@@ -939,14 +1399,13 @@
           ctx.beginPath();
           ctx.moveTo(lastX, lastY);
           
-          // Cria um efeito de relâmpago irregular
-          const steps = 5;
+          const steps = 8;
           const dx = (target.x - lastX) / steps;
           const dy = (target.y - lastY) / steps;
           
           for (let i = 1; i <= steps; i++) {
-            const x = lastX + dx * i + (Math.random() * 10 - 5);
-            const y = lastY + dy * i + (Math.random() * 10 - 5);
+            const x = lastX + dx * i + (Math.random() * 20 - 10);
+            const y = lastY + dy * i + (Math.random() * 20 - 10);
             ctx.lineTo(x, y);
           }
           
@@ -954,131 +1413,159 @@
           lastX = target.x;
           lastY = target.y;
         }
+        
+        ctx.shadowBlur = 0;
       }
     }
 
     function drawHUD() {
-      // Barra de vida
-      ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
-      ctx.fillRect(20, 20, 200, 30);
-      ctx.fillStyle = player.health > 50 ? "lime" : player.health > 20 ? "orange" : "red";
-      ctx.fillRect(20, 20, 200 * (player.health / player.maxHealth), 30);
+      ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
+      ctx.fillRect(20, 20, 250, 35);
+      ctx.fillStyle = player.health > 50 ? "#00ff88" : player.health > 20 ? "orange" : "red";
+      ctx.fillRect(20, 20, 250 * (player.health / player.maxHealth), 35);
       ctx.strokeStyle = "white";
-      ctx.strokeRect(20, 20, 200, 30);
+      ctx.strokeRect(20, 20, 250, 35);
       ctx.fillStyle = "white";
-      ctx.font = "16px Arial";
-      ctx.fillText(`Vida: ${Math.floor(player.health)}/${player.maxHealth}`, 30, 42);
+      ctx.font = "16px 'Press Start 2P', cursive";
+      ctx.fillText(`VIDA: ${Math.floor(player.health)}/${player.maxHealth}`, 30, 45);
       
-      // Barra de especial
-      const specialWidth = 200 * (1 - player.specialCooldown / 600);
-      ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
-      ctx.fillRect(20, 60, 200, 20);
-      ctx.fillStyle = specialWidth >= 200 ? "gold" : "rgba(200, 200, 0, 0.7)";
-      ctx.fillRect(20, 60, specialWidth, 20);
+      const specialWidth = 250 * (1 - player.specialCooldown / 500);
+      ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
+      ctx.fillRect(20, 70, 250, 25);
+      ctx.fillStyle = specialWidth >= 250 ? "gold" : "#00ffff";
+      ctx.fillRect(20, 70, specialWidth, 25);
       ctx.strokeStyle = "white";
-      ctx.strokeRect(20, 60, 200, 20);
+      ctx.strokeRect(20, 70, 250, 25);
       
-      if (specialWidth >= 200) {
+      if (specialWidth >= 250) {
         ctx.fillStyle = "black";
-        ctx.fillText("ESPECIAL PRONTO (E)", 30, 76);
+        ctx.fillText("ESPECIAL PRONTO (E)", 30, 90);
       }
       
-      // Poder selecionado
-      ctx.fillStyle = "white";
-      ctx.font = "16px Arial";
+      ctx.fillStyle = "#00ff88";
+      ctx.font = "14px 'Press Start 2P', cursive";
       let specialName = "";
       switch(selectedSpecial) {
-        case "explosive": specialName = "Explosivo"; break;
-        case "multi": specialName = "Múltiplos Tiros"; break;
-        case "freeze": specialName = "Congelante"; break;
-        case "lightning": specialName = "Relâmpago"; break;
-        case "shield": specialName = "Escudo"; break;
+        case "explosive": specialName = "EXPLOSIVO"; break;
+        case "multi": specialName = "CHUVA DE FLECHAS"; break;
+        case "freeze": specialName = "CONGELAMENTO"; break;
+        case "lightning": specialName = "RELÂMPAGO"; break;
+        case "shield": specialName = "ESCUDO CÓSMICO"; break;
       }
-      ctx.fillText(`Poder: ${specialName}`, 20, 100);
+      ctx.fillText(`PODER: ${specialName}`, 20, 120);
       
-      // Escudo ativo
       if (player.shieldActive) {
-        ctx.fillStyle = "rgba(0, 150, 255, 0.7)";
-        ctx.fillText(`Escudo: ${Math.ceil(player.shieldTimer / 60)}s`, 20, 130);
+        ctx.fillStyle = "rgba(0, 200, 255, 0.8)";
+        ctx.fillText(`ESCUDO: ${Math.ceil(player.shieldTimer / 60)}s`, 20, 150);
       }
       
-      // Slow ativo
       if (player.slowTimer > 0) {
-        ctx.fillStyle = "rgba(0, 200, 255, 0.7)";
-        ctx.fillText(`Slow: ${Math.ceil(player.slowTimer / 60)}s`, 20, 160);
+        ctx.fillStyle = "rgba(0, 200, 255, 0.8)";
+        ctx.fillText(`LENTIDÃO: ${Math.ceil(player.slowTimer / 60)}s`, 20, 180);
+      }
+      
+      ctx.fillStyle = "gold";
+      ctx.textAlign = "right";
+      ctx.fillText(`PONTOS: ${score}`, canvas.width - 30, 40);
+      ctx.fillText(`RECORDE: ${highScore}`, canvas.width - 30, 70);
+      
+      if (player.combo > 1) {
+        const comboAlpha = player.comboTimer / 60;
+        ctx.fillStyle = `rgba(255, 255, 255, ${comboAlpha})`;
+       
+        ctx.fillText(`COMBO x${player.combo}!`, canvas.width - 30, 110);
+      }
+      ctx.textAlign = "left";
+      
+      if (player.dashCooldown > 0) {
+        ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
+        ctx.fillText(`DASH: ${Math.ceil(player.dashCooldown / 60)}s`, 20, 210);
       }
     }
 
     function spawnEnemiesForWave(wave) {
-      const count = 5 + wave * 2;
+      const count = 5 + wave * 3;
       const bossWave = wave % 5 === 0;
       const finalBossWave = wave === 15;
       
-      // Limpa inimigos existentes
       enemies = [];
       
       if (finalBossWave) {
-        // Wave do boss final
+        // wave 15 - boss final
         bosses.push(new Enemy(8, wave));
-        waveDisplay.textContent = `Wave: ${wave} (BOSS FINAL)`;
+        waveDisplay.textContent = `WAVE: ${wave} (BOSS FINAL)`;
       } else if (bossWave) {
         if (wave === 5) {
-          // Wave 5 - Boss normal (mais difícil)
+          // Wave 5 - boss roxo
           bosses.push(new Enemy(6, wave));
-          waveDisplay.textContent = `Wave: ${wave} (BOSS)`;
+          waveDisplay.textContent = `WAVE: ${wave} (BOSS)`;
         } else if (wave === 10) {
-          // Wave 10 - Boss amarelo
+          // Wave 10 - boss amarelo
           bosses.push(new Enemy(7, wave));
-          waveDisplay.textContent = `Wave: ${wave} (BOSS AMARELO)`;
+          waveDisplay.textContent = `WAVE: ${wave} (BOSS DOURADO)`;
         } else {
-          // Outras waves de boss (caso adicione mais)
+          // spawn dos monstrao bolado
           bosses.push(new Enemy(6, wave));
-          waveDisplay.textContent = `Wave: ${wave} (BOSS)`;
+          waveDisplay.textContent = `WAVE: ${wave} (BOSS)`;
         }
       } else {
-        // Wave normal
         for (let i = 0; i < count; i++) {
-          // Escolhe tipo de inimigo baseado na wave
           let type;
           const r = Math.random();
           
           if (wave < 3) {
-            type = 1; // Apenas básicos nas waves iniciais
+            type = 1; 
           } else if (wave < 6) {
-            type = r < 0.7 ? 1 : r < 0.9 ? 2 : 3;
+            type = r < 0.6 ? 1 : r < 0.85 ? 2 : 3;
           } else if (wave < 10) {
-            type = r < 0.5 ? 1 : r < 0.75 ? 2 : r < 0.9 ? 3 : 4;
+            type = r < 0.4 ? 1 : r < 0.7 ? 2 : r < 0.85 ? 3 : r < 0.95 ? 4 : 5;
           } else {
-            type = r < 0.4 ? 1 : r < 0.65 ? 2 : r < 0.8 ? 3 : r < 0.9 ? 4 : 5;
+            type = r < 0.3 ? 1 : r < 0.6 ? 2 : r < 0.8 ? 3 : r < 0.9 ? 4 : 5;
           }
           
           enemies.push(new Enemy(type, wave));
         }
-        waveDisplay.textContent = `Wave: ${wave}`;
+        waveDisplay.textContent = `WAVE: ${wave}`;
       }
       
-      // Chance de spawnar power-up
-      if (Math.random() < 0.3) {
+      if (Math.random() < 0.4) {
         powerUps.push(new PowerUp());
       }
     }
 
     function showWaveStart(wave) {
       const waveText = wave === 15 ? "BOSS FINAL" : 
-                      wave === 10 ? "BOSS AMARELO" : 
-                      wave === 5 ? "BOSS INCOMING" : 
+                      wave === 10 ? "BOSS DOURADO" : 
+                      wave === 5 ? "BOSS" : 
                       `WAVE ${wave}`;
+      
+      // Dark overlay
+      ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      // Wave box
       ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
-      ctx.fillRect(canvas.width / 2 - 150, canvas.height / 2 - 50, 300, 100);
-      ctx.strokeStyle = "gold";
-      ctx.lineWidth = 3;
-      ctx.strokeRect(canvas.width / 2 - 150, canvas.height / 2 - 50, 300, 100);
-      ctx.fillStyle = "white";
-      ctx.font = "36px Arial";
+      ctx.fillRect(canvas.width / 2 - 200, canvas.height / 2 - 80, 400, 160);
+      ctx.strokeStyle = "#00ff88";
+      ctx.lineWidth = 5;
+      ctx.strokeRect(canvas.width / 2 - 200, canvas.height / 2 - 80, 400, 160);
+      
+      // Wave text
+      ctx.fillStyle = "#00ffff";
+      ctx.font = "48px 'Bangers', cursive";
       ctx.textAlign = "center";
-      ctx.fillText(waveText, canvas.width / 2, canvas.height / 2);
-      ctx.font = "18px Arial";
-      ctx.fillText("Prepare-se!", canvas.width / 2, canvas.height / 2 + 30);
+      ctx.fillText(waveText, canvas.width / 2, canvas.height / 2 - 20);
+      
+      ctx.font = "24px 'Press Start 2P', cursive";
+      ctx.fillText("PREPARE-SE!", canvas.width / 2, canvas.height / 2 + 30);
+      
+      if (waveTimer < 180 && waveTimer > 0) {
+        const count = Math.ceil(waveTimer / 60);
+        ctx.font = "36px 'Press Start 2P', cursive";
+        ctx.fillStyle = "gold";
+        ctx.fillText(count.toString(), canvas.width / 2, canvas.height / 2 + 80);
+      }
+      
       ctx.textAlign = "start";
     }
 
@@ -1108,13 +1595,13 @@
     function gameLoop() {
       if (!gameActive) return;
       
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
       
-      // Fundo estrelado
       ctx.fillStyle = "white";
-      for (let i = 0; i < 100; i++) {
+      for (let i = 0; i < 150; i++) {
         const alpha = Math.random() * 0.8 + 0.2;
-        const size = Math.random() * 2 + 1;
+        const size = Math.random() * 3 + 1;
         ctx.globalAlpha = alpha;
         ctx.fillRect(
           Math.random() * canvas.width,
@@ -1126,28 +1613,39 @@
 
       if (player.health <= 0) {
         gameOver = true;
-        ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
+        ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
         ctx.fillStyle = "red";
-        ctx.font = "48px Arial";
+        ctx.font = "72px 'Bangers', cursive";
         ctx.textAlign = "center";
-        ctx.fillText("GAME OVER", canvas.width / 2, canvas.height / 2 - 30);
-        ctx.font = "24px Arial";
-        ctx.fillText(`Você chegou até a wave ${currentWave}`, canvas.width / 2, canvas.height / 2 + 20);
+        ctx.fillText("GAME OVER", canvas.width / 2, canvas.height / 2 - 50);
+        
+        ctx.font = "24px 'Press Start 2P', cursive";
         ctx.fillStyle = "white";
-        ctx.fillText("Clique para voltar ao menu", canvas.width / 2, canvas.height / 2 + 60);
+        ctx.fillText(`VOCÊ CHEGOU ATÉ A WAVE ${currentWave}`, canvas.width / 2, canvas.height / 2 + 20);
+        ctx.fillText(`PONTUAÇÃO: ${score}`, canvas.width / 2, canvas.height / 2 + 60);
+        
+        if (score > highScore) {
+          highScore = score;
+          localStorage.setItem('highScore', highScore);
+          ctx.fillStyle = "gold";
+          ctx.fillText("NOVO RECORDE!", canvas.width / 2, canvas.height / 2 + 100);
+        }
+        
+        ctx.fillStyle = "#00ff88";
+        ctx.fillText("CLIQUE PARA VOLTAR AO MENU", canvas.width / 2, canvas.height / 2 + 150);
         ctx.textAlign = "start";
         
+        sounds.gameOver.play();
         canvas.addEventListener('click', backToMenu, { once: true });
         return;
       }
 
-      // Mostra aviso de wave no início
       if (waveTimer > 0) {
         waveTimer--;
         showWaveStart(currentWave);
         
-        // Não atualiza o jogo durante o aviso
         requestAnimationFrame(gameLoop);
         return;
       }
@@ -1155,106 +1653,112 @@
       player.update();
       player.draw();
 
-      // Atualiza e desenha flechas
       arrows = arrows.filter(a => a.alive);
       arrows.forEach(a => { a.update(); a.draw(); });
 
-      // Atualiza e desenha inimigos
       enemies.forEach(e => {
         e.update();
         e.draw();
         
-        // Colisão com jogador
         if (Math.hypot(player.x - e.x, player.y - e.y) < player.radius + e.radius) {
-          if (!player.shieldActive) {
-            player.health -= e.damage;
-          }
+          player.takeDamage(e.damage);
         }
       });
 
-      // Atualiza e desenha bosses
       bosses.forEach(b => {
         b.update();
         b.draw();
         
-        // Colisão com jogador
         if (Math.hypot(player.x - b.x, player.y - b.y) < player.radius + b.radius) {
-          if (!player.shieldActive) {
-            player.health -= b.damage;
-          }
+          player.takeDamage(b.damage);
         }
       });
 
-      // Atualiza e desenha projéteis inimigos
       enemyProjectiles = enemyProjectiles.filter(p => p.alive);
       enemyProjectiles.forEach(p => {
         p.update();
         p.draw();
         
-        // Colisão com jogador
         if (Math.hypot(player.x - p.x, player.y - p.y) < player.radius + p.radius) {
-          if (!player.shieldActive) {
-            player.health -= p.damage;
-            if (p.isEnergyBall) {
-              player.slowTimer = 60; // 1 segundo de slow
-            }
+          player.takeDamage(p.damage);
+          if (p.isEnergyBall) {
+            player.slowTimer = 90; 
           }
           p.alive = false;
         }
       });
 
-      // Atualiza e desenha power-ups
       powerUps = powerUps.filter(p => p.lifetime > 0);
       powerUps.forEach((p, i) => {
         p.draw();
         
-        // Colisão com jogador
         if (Math.hypot(player.x - p.x, player.y - p.y) < player.radius + p.radius) {
+          sounds.powerup.play();
           switch(p.type) {
             case "heal":
-              player.health = Math.min(player.maxHealth, player.health + 30);
+              player.health = Math.min(player.maxHealth, player.health + 40);
               break;
             case "rapid":
-              player.shootCooldown = Math.max(0, player.shootCooldown - 60);
+              player.shootCooldown = Math.max(0, player.shootCooldown - 90);
               break;
             case "special":
-              player.specialCooldown = Math.max(0, player.specialCooldown - 120);
+              player.specialCooldown = Math.max(0, player.specialCooldown - 150);
               break;
             case "shield":
               player.shieldActive = true;
-              player.shieldTimer = 300;
+              player.shieldTimer = 360; 
               break;
             case "maxhp":
-              player.maxHealth += 20;
-              player.health += 20;
+              player.maxHealth += 30;
+              player.health += 30;
               break;
           }
           powerUps.splice(i, 1);
         }
       });
 
-      // Colisão de flechas com inimigos
       arrows.forEach(a => {
-        enemies.forEach(e => {
+        enemies.forEach((e, ei) => {
           if (Math.hypot(a.x - e.x, a.y - e.y) < e.radius) {
-            e.health -= a.specialEffect === 'lightning' ? 40 : 25;
-            a.alive = false;
+            e.takeDamage(a.damage);
+            
+            score += e.scoreValue * (1 + player.combo * 0.1);
+            
+            if (e.health <= 0) {
+              player.kills++;
+              if (Math.random() < 0.1) {
+                powerUps.push(new PowerUp());
+              }
+            }
+            
+            if (a.pierce <= 0) {
+              a.alive = false;
+            } else {
+              a.pierce--;
+            }
           }
         });
         
         bosses.forEach(b => {
           if (Math.hypot(a.x - b.x, a.y - b.y) < b.radius) {
-            b.health -= a.specialEffect === 'lightning' ? 30 : 15;
-            a.alive = false;
+            b.takeDamage(a.damage * 0.6); 
+            
+            if (b.health <= 0) {
+              score += b.scoreValue * (1 + player.combo * 0.2);
+            }
+            
+            if (a.pierce <= 0) {
+              a.alive = false;
+            } else {
+              a.pierce--;
+            }
           }
         });
       });
 
-      // Filtra inimigos e bosses mortos
       enemies = enemies.filter(e => e.health > 0);
       bosses = bosses.filter(b => b.health > 0);
 
-      // Atualiza efeitos especiais
       explosions = explosions.filter(e => e.lifetime > 0);
       explosions.forEach(e => { e.update(); e.draw(); });
       
@@ -1264,17 +1768,21 @@
       lightningEffects = lightningEffects.filter(l => l.lifetime > 0);
       lightningEffects.forEach(l => l.draw());
 
-      // Verifica se a wave foi completada
       if (enemies.length === 0 && bosses.length === 0 && waveTimer <= 0) {
         currentWave++;
         
-        // Verifica vitória
         if (currentWave > 15) {
           victoryScreen.style.display = 'flex';
+          sounds.victory.play();
+          
+          if (score > highScore) {
+            highScore = score;
+            localStorage.setItem('highScore', highScore);
+          }
           return;
         }
         
-        waveTimer = 180; // 3 segundos entre waves
+        waveTimer = 180; 
         spawnEnemiesForWave(currentWave);
       }
 
