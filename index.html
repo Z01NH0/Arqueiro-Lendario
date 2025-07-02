@@ -759,7 +759,7 @@
             break;
           case 7: // Wave 10 Boss
             this.radius = 45;
-            this.speed = player.speed * 0.95;
+            this.speed = player.speed * 0.75;
             this.health = (500 + wave * 40) * 1.4;
             this.color = "#ffff00";
             this.damage = 2;
@@ -812,7 +812,7 @@
             if (this.shootCooldown <= 0) {
               const shootAngle = Math.atan2(player.y - this.y, player.x - this.x);
               enemyProjectiles.push(new EnemyProjectile(this.x, this.y, shootAngle, this.type));
-              this.shootCooldown = 40;
+              this.shootCooldown = 20;
             }
           }
           else if (this.type === 7) {
@@ -830,7 +830,7 @@
                 const angle = (i / 36) * Math.PI * 2;
                 enemyProjectiles.push(new EnemyProjectile(this.x, this.y, angle, 'energy'));
               }
-              this.specialCooldown = 300;
+              this.specialCooldown = 500;
             }
           }
           else if (this.type === 8) { 
@@ -855,7 +855,7 @@
               for (let i = 0; i < 12; i++) {
                 enemyProjectiles.push(new EnemyProjectile(this.x, this.y, shootAngle + (i * Math.PI / 6), this.type));
               }
-              this.shootCooldown = 50;
+              this.shootCooldown = 40;
             }
           }
           
