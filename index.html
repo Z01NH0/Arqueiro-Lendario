@@ -270,12 +270,17 @@
       <div class="power-option" onclick="selectPower('lightning')">
        <div class="character-icon">⚡</div>
         <div>RELÂMPAGO</div>
-        <div class="power-description">Eletrocuta seu inimigo mais próximo e vai gerando uma corrente elétrica até 8 inimigos! Mas o dano diminui a cada inimigo atingido</div>
+        <div class="power-description">Eletrocuta até 12 inimigos próximos, deixando-os paralisados por 0.5s!</div>
       </div>
       <div class="power-option" onclick="selectPower('shield')">
         <div class="character-icon">🔰</div>
         <div>ESCUDO CÓSMICO</div>
         <div class="power-description">Cria um escudo de invencibilidade temporário!</div>
+      </div>
+      <div class="power-option" onclick="selectPower('meteor')">
+        <div class="character-icon">☄️</div>
+        <div>ENCOMENDA DOS CÉUS</div>
+        <div class="power-description">Meteoros esmagam seus inimigos e deixam o chão em chamas!</div>
       </div>
     </div>
     <button onclick="startGame()">COMEÇAR JOGO</button>
@@ -287,7 +292,7 @@
     </div>
   </div>
   
-  <canvas id="gameCanvas" width="900" height="650"></canvas>
+  <canvas id="gameCanvas" width="1000" height="750"></canvas>
   
   <div id="wave-display" style="display: none;">WAVE: 1</div>
   
@@ -298,7 +303,6 @@
   </div>
   
   <script>
- 
     function createMenuParticles() {
       const colors = ['#00ff88', '#00ffff', '#ff00ff', '#ffff00'];
       for (let i = 0; i < 50; i++) {
@@ -315,7 +319,6 @@
         particle.style.background = colors[Math.floor(Math.random() * colors.length)];
         
         document.body.appendChild(particle);
-        
         
         setInterval(() => {
           particle.style.transform = `translate(${Math.random() * 20 - 10}px, ${Math.random() * 20 - 10}px)`;
@@ -366,7 +369,8 @@
       enemyHit: new Audio('data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU...'),
       playerHit: new Audio('data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU...'),
       victory: new Audio('data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU...'),
-      gameOver: new Audio('data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU...')
+      gameOver: new Audio('data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU...'),
+      meteor: new Audio('data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU...')
     };
 
     Object.values(sounds).forEach(sound => {
@@ -430,6 +434,16 @@
         this.kills = 0;
         this.combo = 0;
         this.comboTimer = 0;
+        this.rapidFireTimer = 0;
+        this.rapidFireActive = false;
+        this.specialCooldowns = {
+          explosive: 0,
+          multi: 0,
+          freeze: 0,
+          lightning: 0,
+          shield: 0,
+          meteor: 0
+        };
       }
 
       update() {
@@ -438,6 +452,13 @@
           this.speed = this.originalSpeed * 0.5;
         } else {
           this.speed = this.originalSpeed;
+        }
+
+        if (this.rapidFireActive) {
+          this.rapidFireTimer--;
+          if (this.rapidFireTimer <= 0) {
+            this.rapidFireActive = false;
+          }
         }
 
         if (keys["Space"] && this.dashCooldown <= 0 && !this.dashing) {
@@ -468,10 +489,11 @@
         this.x = Math.max(this.radius, Math.min(canvas.width - this.radius, this.x));
         this.y = Math.max(this.radius, Math.min(canvas.height - this.radius, this.y));
 
+        const shootSpeed = this.rapidFireActive ? 6 : 10;
         if (mouse.clicked && this.shootCooldown <= 0) {
           const angle = Math.atan2(mouse.y - this.y, mouse.x - this.x);
           arrows.push(new Arrow(this.x, this.y, angle));
-          this.shootCooldown = 10;
+          this.shootCooldown = shootSpeed;
           sounds.shoot.play();
           
           this.combo++;
@@ -479,13 +501,27 @@
         }
 
         if (this.shootCooldown > 0) this.shootCooldown--;
-        if (this.specialCooldown > 0) this.specialCooldown--;
-        if (this.comboTimer > 0) this.comboTimer--;
+        
+        // Update all special cooldowns
+        for (const key in this.specialCooldowns) {
+          if (this.specialCooldowns[key] > 0) {
+            this.specialCooldowns[key]--;
+          }
+        }
 
+        if (this.comboTimer > 0) this.comboTimer--;
        
-        if (keys["KeyE"] && this.specialCooldown <= 0) {
+        if (keys["KeyE"] && this.specialCooldowns[selectedSpecial] <= 0) {
           useSpecial(this);
-          this.specialCooldown = 500; 
+          // Set cooldown based on power type
+          switch(selectedSpecial) {
+            case 'explosive': this.specialCooldowns.explosive = 600; break; // 10 segundos
+            case 'multi': this.specialCooldowns.multi = 420; break; // 7 segundos
+            case 'freeze': this.specialCooldowns.freeze = 780; break; // 13 segundos
+            case 'lightning': this.specialCooldowns.lightning = 660; break; // 11 segundos
+            case 'shield': this.specialCooldowns.shield = 900; break; // 15 segundos
+            case 'meteor': this.specialCooldowns.meteor = 1200; break; // 20 segundos
+          }
         }
 
         if (this.shieldActive) {
@@ -606,7 +642,7 @@
           this.alive = false;
           
           if (this.specialEffect === 'explosive') {
-            explosions.push(new Explosion(this.x, this.y, 60));
+            explosions.push(new Explosion(this.x, this.y, 72)); // Aumentado em 20% (60 -> 72)
           }
         }
       }
@@ -689,8 +725,6 @@
       }
     }
 
-    
-
     class Enemy {
       constructor(type = 1, wave = 1) {
         this.type = type;
@@ -723,7 +757,7 @@
             break;
           case 3: 
             this.radius = 15;
-            this.speed = 4 + wave * 0.1;
+            this.speed = 3.6 + wave * 0.09; // 10% mais devagar (4 -> 3.6)
             this.health = 30 + wave * 2;
             this.color = "#ffaa00";
             this.damage = 0.3;
@@ -744,6 +778,7 @@
             this.color = "#aa00aa";
             this.damage = 0.6;
             this.shootCooldown = 0;
+            this.shootingRange = 300;
             this.scoreValue = 30;
             break;
           case 6: // Wave 5 Boss
@@ -785,9 +820,15 @@
         this.originalSpeed = this.speed;
         this.slowTimer = 0;
         this.hitFlash = 0;
+        this.stunnedTimer = 0;
       }
 
       update() {
+        if (this.stunnedTimer > 0) {
+          this.stunnedTimer--;
+          return;
+        }
+
         if (this.slowTimer > 0) {
           this.slowTimer--;
           this.speed = this.originalSpeed * 0.3;
@@ -797,7 +838,24 @@
         
         if (this.hitFlash > 0) this.hitFlash--;
 
-        if (this.type === 5 || this.type === 6 || this.type === 7 || this.type === 8) {
+        if (this.type === 5) { // Inimigo roxo (atirador)
+          const distanceToPlayer = Math.hypot(player.x - this.x, player.y - this.y);
+          
+          if (distanceToPlayer > this.shootingRange) {
+            // Move towards player
+            const angle = Math.atan2(player.y - this.y, player.x - this.x);
+            this.x += Math.cos(angle) * this.speed;
+            this.y += Math.sin(angle) * this.speed;
+          } else {
+            // Stop and shoot
+            if (this.shootCooldown <= 0) {
+              const shootAngle = Math.atan2(player.y - this.y, player.x - this.x);
+              enemyProjectiles.push(new EnemyProjectile(this.x, this.y, shootAngle, this.type));
+              this.shootCooldown = 100;
+            }
+          }
+        }
+        else if (this.type === 6 || this.type === 7 || this.type === 8) {
           const angle = Math.atan2(player.y - this.y, player.x - this.x);
           this.x += Math.cos(angle) * this.speed;
           this.y += Math.sin(angle) * this.speed;
@@ -861,7 +919,7 @@
           
           if (this.shootCooldown > 0) this.shootCooldown--;
         } else {
-          
+          // Move towards player
           const angle = Math.atan2(player.y - this.y, player.x - this.x);
           this.x += Math.cos(angle) * this.speed;
           this.y += Math.sin(angle) * this.speed;
@@ -904,7 +962,7 @@
             ctx.arc(0, 0, this.radius - 10, 0, Math.PI * 2);
             ctx.fill();
             break;
-          case 5: // atirador "tem que arruma o tiro fdp"
+          case 5: // atirador
             ctx.fillStyle = "white";
             ctx.beginPath();
             ctx.arc(0, 0, 8, 0, Math.PI * 2);
@@ -983,6 +1041,10 @@
         this.hitFlash = 3;
         sounds.enemyHit.play();
       }
+      
+      stun(duration) {
+        this.stunnedTimer = duration;
+      }
     }
 
     class FireTrail {
@@ -1049,7 +1111,6 @@
       }
 
       update() {
-       
         if (this.homing) {
           const targetAngle = Math.atan2(player.y - this.y, player.x - this.x);
           const angleDiff = ((targetAngle - this.angle + 3 * Math.PI) % (2 * Math.PI)) - Math.PI;
@@ -1219,21 +1280,118 @@
       }
     }
 
+    class Meteor {
+      constructor(targetX, targetY) {
+        this.x = Math.random() * canvas.width;
+        this.y = -100;
+        this.targetX = targetX;
+        this.targetY = targetY;
+        this.speed = 15;
+        this.radius = 30;
+        this.damage = 54; // 40% do dano da explosão (135 * 0.4)
+        this.impacted = false;
+        this.fireDuration = 180; // 3 segundos
+        this.fireRadius = 80;
+      }
+      
+      update() {
+        if (!this.impacted) {
+          // Move towards target
+          const angle = Math.atan2(this.targetY - this.y, this.targetX - this.x);
+          this.x += Math.cos(angle) * this.speed;
+          this.y += Math.sin(angle) * this.speed;
+          
+          // Check if reached target
+          if (Math.hypot(this.targetX - this.x, this.targetY - this.y) < 10) {
+            this.impacted = true;
+            sounds.explosion.play();
+            
+            // Damage enemies in radius
+            [...enemies, ...bosses].forEach(e => {
+              const dist = Math.hypot(this.x - e.x, this.y - e.y);
+              if (dist < this.radius + e.radius) {
+                e.takeDamage(this.damage);
+              }
+            });
+          }
+        } else {
+          this.fireDuration--;
+        }
+      }
+      
+      draw() {
+        if (!this.impacted) {
+          // Draw falling meteor
+          ctx.save();
+          ctx.translate(this.x, this.y);
+          
+          // Meteor core
+          const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, this.radius);
+          gradient.addColorStop(0, 'orange');
+          gradient.addColorStop(0.7, 'red');
+          gradient.addColorStop(1, 'darkred');
+          
+          ctx.fillStyle = gradient;
+          ctx.beginPath();
+          ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+          ctx.fill();
+          
+          // Meteor trail
+          ctx.strokeStyle = 'rgba(255, 165, 0, 0.7)';
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.moveTo(0, 0);
+          ctx.lineTo(-this.speed * 2, -this.speed * 3);
+          ctx.stroke();
+          
+          ctx.restore();
+        } else if (this.fireDuration > 0) {
+          // Draw fire effect
+          const gradient = ctx.createRadialGradient(
+            this.x, this.y, 0,
+            this.x, this.y, this.fireRadius
+          );
+          gradient.addColorStop(0, 'rgba(255, 100, 0, 0.8)');
+          gradient.addColorStop(0.7, 'rgba(255, 50, 0, 0.4)');
+          gradient.addColorStop(1, 'rgba(255, 0, 0, 0)');
+          
+          ctx.fillStyle = gradient;
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.fireRadius * (this.fireDuration / 180), 0, Math.PI * 2);
+          ctx.fill();
+          
+          // Damage enemies in fire
+          if (this.fireDuration % 10 === 0) { // Damage every 10 frames
+            [...enemies, ...bosses].forEach(e => {
+              const dist = Math.hypot(this.x - e.x, this.y - e.y);
+              if (dist < this.fireRadius) {
+                e.takeDamage(5); // Burn damage
+              }
+            });
+          }
+        }
+      }
+      
+      isActive() {
+        return !this.impacted || this.fireDuration > 0;
+      }
+    }
+
     function useSpecial(player) {
       const angle = Math.atan2(mouse.y - player.y, mouse.x - player.x);
       
       switch(selectedSpecial) {
         case "explosive":
-          explosions.push(new Explosion(player.x, player.y, 150));
+          explosions.push(new Explosion(player.x, player.y, 180)); // Aumentado em 20% (150 -> 180)
           sounds.explosion.play();
           
           [...enemies, ...bosses].forEach(e => {
             const dist = Math.hypot(player.x - e.x, player.y - e.y);
-            if (dist < 150) {
-              e.takeDamage(90 + (dist < 75 ? 40 : 0));
+            if (dist < 180) {
+              e.takeDamage(90 + (dist < 90 ? 40 : 0));
               
               const knockbackAngle = Math.atan2(e.y - player.y, e.x - player.x);
-              const knockbackPower = 10 * (1 - dist / 150);
+              const knockbackPower = 10 * (1 - dist / 180);
               e.x += Math.cos(knockbackAngle) * knockbackPower;
               e.y += Math.sin(knockbackAngle) * knockbackPower;
             }
@@ -1266,13 +1424,14 @@
             Math.hypot(player.x - e.x, player.y - e.y) < 250
           ).sort((a, b) => 
             Math.hypot(player.x - a.x, player.y - a.y) - Math.hypot(player.x - b.x, player.y - b.y)
-          ).slice(0, 8);
+          ).slice(0, 12); // Aumentado para 12 inimigos
           
           if (lightningTargets.length > 0) {
             lightningEffects.push(new LightningEffect(player, lightningTargets));
             
             lightningTargets.forEach((target, i) => {
               target.takeDamage(75 / (i + 1));
+              target.stun(30); // Paralisado por 0.5 segundos (30 frames)
               if (target.type === 5 || target.type === 6 || target.type === 7 || target.type === 8) {
                 target.shootCooldown += 90; 
               }
@@ -1284,6 +1443,72 @@
           sounds.shield.play();
           player.shieldActive = true;
           player.shieldTimer = 360; 
+          break;
+          
+        case "meteor":
+          sounds.meteor.play();
+         
+          
+          setTimeout(() => {
+            if (enemies.length > 0 || bosses.length > 0) {
+              const target = enemies[0] || bosses[0];
+              meteors.push(new Meteor(target.x, target.y));
+            }
+          }, 0);
+          
+          setTimeout(() => {
+            if (enemies.length > 1 || bosses.length > 0) {
+              const target = enemies[1] || bosses[0];
+              meteors.push(new Meteor(target.x, target.y));
+            }
+          }, 500);
+          
+          setTimeout(() => {
+            if (enemies.length > 2 || bosses.length > 0) {
+              const target = enemies[2] || bosses[0];
+              meteors.push(new Meteor(target.x, target.y));
+            }
+          }, 1000);
+          
+           
+          setTimeout(() => {
+            if (enemies.length > 3 || bosses.length > 0) {
+              const target = enemies[3] || bosses[0];
+              meteors.push(new Meteor(target.x, target.y));
+            }
+          }, 1500);
+          
+           
+          setTimeout(() => {
+            if (enemies.length > 4 || bosses.length > 0) {
+              const target = enemies[4] || bosses[0];
+              meteors.push(new Meteor(target.x, target.y));
+            }
+          }, 2000);
+          
+           
+          setTimeout(() => {
+            if (enemies.length > 5 || bosses.length > 0) {
+              const target = enemies[5] || bosses[0];
+              meteors.push(new Meteor(target.x, target.y));
+            }
+          }, 2500);
+          
+           
+          setTimeout(() => {
+            if (enemies.length > 6 || bosses.length > 0) {
+              const target = enemies[6] || bosses[0];
+              meteors.push(new Meteor(target.x, target.y));
+            }
+          }, 3000);
+          
+           
+          setTimeout(() => {
+            if (enemies.length > 7 || bosses.length > 0) {
+              const target = enemies[7] || bosses[0];
+              meteors.push(new Meteor(target.x, target.y));
+            }
+          }, 3500);
           break;
       }
     }
@@ -1429,15 +1654,48 @@
       ctx.font = "16px 'Press Start 2P', cursive";
       ctx.fillText(`VIDA: ${Math.floor(player.health)}/${player.maxHealth}`, 30, 45);
       
-      const specialWidth = 250 * (1 - player.specialCooldown / 500);
+      // Draw cooldown for current special
+      let cooldownMax = 0;
+      let cooldownCurrent = 0;
+      let cooldownWidth = 0;
+      
+      switch(selectedSpecial) {
+        case 'explosive': 
+          cooldownMax = 600;
+          cooldownCurrent = player.specialCooldowns.explosive;
+          break;
+        case 'multi': 
+          cooldownMax = 420;
+          cooldownCurrent = player.specialCooldowns.multi;
+          break;
+        case 'freeze': 
+          cooldownMax = 780;
+          cooldownCurrent = player.specialCooldowns.freeze;
+          break;
+        case 'lightning': 
+          cooldownMax = 660;
+          cooldownCurrent = player.specialCooldowns.lightning;
+          break;
+        case 'shield': 
+          cooldownMax = 900;
+          cooldownCurrent = player.specialCooldowns.shield;
+          break;
+        case 'meteor': 
+          cooldownMax = 1200;
+          cooldownCurrent = player.specialCooldowns.meteor;
+          break;
+      }
+      
+      cooldownWidth = 250 * (1 - cooldownCurrent / cooldownMax);
+      
       ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
       ctx.fillRect(20, 70, 250, 25);
-      ctx.fillStyle = specialWidth >= 250 ? "gold" : "#00ffff";
-      ctx.fillRect(20, 70, specialWidth, 25);
+      ctx.fillStyle = cooldownWidth >= 250 ? "gold" : "#00ffff";
+      ctx.fillRect(20, 70, cooldownWidth, 25);
       ctx.strokeStyle = "white";
       ctx.strokeRect(20, 70, 250, 25);
       
-      if (specialWidth >= 250) {
+      if (cooldownWidth >= 250) {
         ctx.fillStyle = "black";
         ctx.fillText("ESPECIAL PRONTO (E)", 30, 90);
       }
@@ -1451,6 +1709,7 @@
         case "freeze": specialName = "CONGELAMENTO"; break;
         case "lightning": specialName = "RELÂMPAGO"; break;
         case "shield": specialName = "ESCUDO CÓSMICO"; break;
+        case "meteor": specialName = "ENCOMENDA DOS CÉUS"; break;
       }
       ctx.fillText(`PODER: ${specialName}`, 20, 120);
       
@@ -1464,6 +1723,11 @@
         ctx.fillText(`LENTIDÃO: ${Math.ceil(player.slowTimer / 60)}s`, 20, 180);
       }
       
+      if (player.rapidFireActive) {
+        ctx.fillStyle = "rgba(0, 255, 255, 0.8)";
+        ctx.fillText(`TIRO RÁPIDO: ${Math.ceil(player.rapidFireTimer / 60)}s`, 20, 210);
+      }
+      
       ctx.fillStyle = "gold";
       ctx.textAlign = "right";
       ctx.fillText(`PONTOS: ${score}`, canvas.width - 30, 40);
@@ -1472,14 +1736,13 @@
       if (player.combo > 1) {
         const comboAlpha = player.comboTimer / 60;
         ctx.fillStyle = `rgba(255, 255, 255, ${comboAlpha})`;
-       
         ctx.fillText(`COMBO x${player.combo}!`, canvas.width - 30, 110);
       }
       ctx.textAlign = "left";
       
       if (player.dashCooldown > 0) {
         ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
-        ctx.fillText(`DASH: ${Math.ceil(player.dashCooldown / 60)}s`, 20, 210);
+        ctx.fillText(`DASH: ${Math.ceil(player.dashCooldown / 60)}s`, 20, 240);
       }
     }
 
@@ -1489,6 +1752,12 @@
       const finalBossWave = wave === 15;
       
       enemies = [];
+      
+      // Reset player position to center
+      if (player) {
+        player.x = canvas.width / 2;
+        player.y = canvas.height / 2;
+      }
       
       if (finalBossWave) {
         // wave 15 - boss final
@@ -1570,7 +1839,7 @@
     }
 
     let player, arrows, enemies, bosses, powerUps, enemyProjectiles;
-    let explosions, freezeEffects, lightningEffects;
+    let explosions, freezeEffects, lightningEffects, meteors;
     let currentWave, waveTimer, gameOver;
 
     function init() {
@@ -1583,6 +1852,7 @@
       explosions = [];
       freezeEffects = [];
       lightningEffects = [];
+      meteors = [];
       
       currentWave = 1;
       waveTimer = 180; 
@@ -1699,10 +1969,13 @@
               player.health = Math.min(player.maxHealth, player.health + 40);
               break;
             case "rapid":
-              player.shootCooldown = Math.max(0, player.shootCooldown - 90);
+              player.rapidFireActive = true;
+              player.rapidFireTimer = 240; // 4 segundos
               break;
             case "special":
-              player.specialCooldown = Math.max(0, player.specialCooldown - 150);
+              for (const key in player.specialCooldowns) {
+                player.specialCooldowns[key] = Math.max(0, player.specialCooldowns[key] - 150);
+              }
               break;
             case "shield":
               player.shieldActive = true;
@@ -1715,6 +1988,13 @@
           }
           powerUps.splice(i, 1);
         }
+      });
+
+      // Update and draw meteors
+      meteors = meteors.filter(m => m.isActive());
+      meteors.forEach(m => {
+        m.update();
+        m.draw();
       });
 
       arrows.forEach(a => {
