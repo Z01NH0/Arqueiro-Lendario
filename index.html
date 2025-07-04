@@ -1409,7 +1409,7 @@
           sounds.freeze.play();
           enemies.forEach(e => {
             e.speed *= 0.1;
-            e.slowTimer = 300; 
+            e.slowTimer = 360; 
           });
           bosses.forEach(b => {
             b.speed *= 0.3;
@@ -1509,6 +1509,13 @@
               meteors.push(new Meteor(target.x, target.y));
             }
           }, 3500);
+          
+           setTimeout(() => {
+            if (enemies.length > 8 || bosses.length > 0) {
+              const target = enemies[8] || bosses[0];
+              meteors.push(new Meteor(target.x, target.y));
+            }
+          }, 4000);
           break;
       }
     }
@@ -1517,9 +1524,9 @@
       constructor(x, y, radius) {
         this.x = x;
         this.y = y;
-        this.radius = radius;
-        this.maxRadius = radius;
-        this.lifetime = 30;
+        this.radius = 100;
+        this.maxRadius = 100;
+        this.lifetime = 70;
       }
       
       update() {
