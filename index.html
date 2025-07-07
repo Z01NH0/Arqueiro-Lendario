@@ -20,6 +20,10 @@
       user-select: none;
     }
     
+    .hell-mode {
+      background: linear-gradient(135deg, #290a0a, #631a1a, #3e0e0e) !important;
+    }
+    
     canvas {
       display: none;
       background: #111;
@@ -27,6 +31,11 @@
       border-radius: 10px;
       box-shadow: 0 0 30px rgba(0, 255, 255, 0.3);
       border: 2px solid #00ffff;
+    }
+    
+    .hell-canvas {
+      box-shadow: 0 0 30px rgba(255, 50, 50, 0.5) !important;
+      border: 2px solid #ff0000 !important;
     }
     
     #menu {
@@ -124,6 +133,14 @@
       transform: translateY(0);
     }
     
+    .hell-button {
+      background: linear-gradient(135deg, #ff0000, #7a0000) !important;
+    }
+    
+    .hell-button:hover {
+      background: linear-gradient(135deg, #e60000, #5a0000) !important;
+    }
+    
     #victory-screen {
       display: none;
       position: absolute;
@@ -155,6 +172,37 @@
       text-shadow: 0 0 10px rgba(0, 255, 150, 0.5);
     }
     
+    #hell-victory-screen {
+      display: none;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.95);
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+      text-align: center;
+    }
+    
+    #hell-victory-screen h1 {
+      color: #ff0000;
+      font-size: 4em;
+      text-shadow: 0 0 20px #ff0000;
+      margin-bottom: 30px;
+      animation: pulse 2s infinite;
+      font-family: 'Bangers', cursive;
+    }
+    
+    #hell-victory-screen p {
+      font-size: 1.5em;
+      margin-bottom: 40px;
+      color: #ff5555;
+      text-shadow: 0 0 10px rgba(255, 50, 50, 0.5);
+    }
+    
     @keyframes pulse {
       0% { transform: scale(1); }
       50% { transform: scale(1.1); }
@@ -173,6 +221,12 @@
       border: 2px solid #00ff88;
       box-shadow: 0 0 15px rgba(0, 255, 150, 0.3);
       text-shadow: 0 0 5px rgba(0, 255, 150, 0.5);
+    }
+    
+    .hell-wave {
+      border: 2px solid #ff0000 !important;
+      box-shadow: 0 0 15px rgba(255, 50, 50, 0.5) !important;
+      text-shadow: 0 0 5px rgba(255, 50, 50, 0.7) !important;
     }
     
     #controls {
@@ -200,6 +254,10 @@
       background: white;
       border-radius: 50%;
       pointer-events: none;
+    }
+    
+    .hell-particle {
+      background: #ff5555 !important;
     }
     
     #loading-screen {
@@ -237,6 +295,12 @@
       margin-top: 15px;
       color: #00ff88;
       font-size: 0.8em;
+    }
+    
+    .lava-patch {
+      position: absolute;
+      border-radius: 50%;
+      pointer-events: none;
     }
   </style>
 </head>
@@ -300,14 +364,21 @@
     <h1>VITÓRIA LENDÁRIA!</h1>
     <p>Você provou ser capaz de superar seus limites, agora teste outros poderes!</p>
     <button onclick="backToMenu()">JOGAR NOVAMENTE</button>
+    <button class="hell-button" onclick="startHellMode()">PROVE SEU VALOR CONTRA O INFERNO</button>
+  </div>
+  
+  <div id="hell-victory-screen">
+    <h1>VITÓRIA SUPREMA!</h1>
+    <p>Você Provou ser sobre Humano e Consquistou as Forças da Escuridão.<br>Você é mais do que o Arqueiro Lendário, Você é o Deus Arqueiro!</p>
+    <button onclick="backToMenu()">JOGAR NOVAMENTE</button>
   </div>
   
   <script>
     function createMenuParticles() {
-      const colors = ['#00ff88', '#00ffff', '#ff00ff', '#ffff00'];
+      const colors = hellMode ? ['#ff5555', '#ff0000', '#ff8800', '#ffcc00'] : ['#00ff88', '#00ffff', '#ff00ff', '#ffff00'];
       for (let i = 0; i < 50; i++) {
         const particle = document.createElement('div');
-        particle.className = 'particle';
+        particle.className = hellMode ? 'particle hell-particle' : 'particle';
         
         const size = Math.random() * 5 + 2;
         particle.style.width = `${size}px`;
@@ -352,30 +423,14 @@
     const ctx = canvas.getContext('2d');
     const waveDisplay = document.getElementById('wave-display');
     const victoryScreen = document.getElementById('victory-screen');
+    const hellVictoryScreen = document.getElementById('hell-victory-screen');
 
     let keys = {}, mouse = { x: 0, y: 0, clicked: false };
     let selectedSpecial = 'explosive';
     let gameActive = false;
+    let hellMode = false;
     let score = 0;
     let highScore = localStorage.getItem('highScore') || 0;
-
-    const sounds = {
-      shoot: new Audio('data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU...'),
-      explosion: new Audio('data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU...'),
-      freeze: new Audio('data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU...'),
-      lightning: new Audio('data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU...'),
-      shield: new Audio('data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU...'),
-      powerup: new Audio('data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU...'),
-      enemyHit: new Audio('data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU...'),
-      playerHit: new Audio('data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU...'),
-      victory: new Audio('data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU...'),
-      gameOver: new Audio('data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU...'),
-      meteor: new Audio('data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU...')
-    };
-
-    Object.values(sounds).forEach(sound => {
-      sound.volume = 0.3;
-    });
 
     document.addEventListener('keydown', e => keys[e.code] = true);
     document.addEventListener('keyup', e => keys[e.code] = false);
@@ -393,10 +448,13 @@
         opt.classList.remove('selected');
       });
       event.currentTarget.classList.add('selected');
-      sounds.powerup.play();
     }
 
     function startGame() {
+      hellMode = false;
+      document.body.classList.remove('hell-mode');
+      canvas.classList.remove('hell-canvas');
+      waveDisplay.classList.remove('hell-wave');
       document.getElementById('menu').style.display = 'none';
       canvas.style.display = 'block';
       waveDisplay.style.display = 'block';
@@ -405,12 +463,30 @@
       init();
     }
 
+    function startHellMode() {
+      hellMode = true;
+      document.body.classList.add('hell-mode');
+      canvas.classList.add('hell-canvas');
+      waveDisplay.classList.add('hell-wave');
+      victoryScreen.style.display = 'none';
+      canvas.style.display = 'block';
+      waveDisplay.style.display = 'block';
+      gameActive = true;
+      currentWave = 16;
+      init();
+    }
+
     function backToMenu() {
       victoryScreen.style.display = 'none';
+      hellVictoryScreen.style.display = 'none';
       document.getElementById('menu').style.display = 'block';
       canvas.style.display = 'none';
       waveDisplay.style.display = 'none';
       gameActive = false;
+      hellMode = false;
+      document.body.classList.remove('hell-mode');
+      canvas.classList.remove('hell-canvas');
+      waveDisplay.classList.remove('hell-wave');
     }
 
     class Player {
@@ -436,6 +512,7 @@
         this.comboTimer = 0;
         this.rapidFireTimer = 0;
         this.rapidFireActive = false;
+        this.burnTimer = 0;
         this.specialCooldowns = {
           explosive: 0,
           multi: 0,
@@ -447,9 +524,16 @@
       }
 
       update() {
+        if (this.burnTimer > 0) {
+          this.burnTimer--;
+          if (this.burnTimer % 60 === 0) {
+            this.takeDamage(10);
+          }
+        }
+
         if (this.slowTimer > 0) {
           this.slowTimer--;
-          this.speed = this.originalSpeed * 0.5;
+          this.speed = this.originalSpeed * 0.7; // 30% slow
         } else {
           this.speed = this.originalSpeed;
         }
@@ -461,13 +545,12 @@
           }
         }
 
-        if (keys["Space"] && this.dashCooldown <= 0 && !this.dashing) {
+        if (keys["KeyQ"] && this.dashCooldown <= 0 && !this.dashing) {
           this.dashing = true;
           this.dashTimer = 15;
           this.dashCooldown = 120;
           this.invulnerable = true;
-          this.speed *= 3;
-          sounds.shield.play();
+          this.speed *= 7;
         }
 
         if (this.dashing) {
@@ -494,7 +577,6 @@
           const angle = Math.atan2(mouse.y - this.y, mouse.x - this.x);
           arrows.push(new Arrow(this.x, this.y, angle));
           this.shootCooldown = shootSpeed;
-          sounds.shoot.play();
           
           this.combo++;
           this.comboTimer = 20; 
@@ -541,14 +623,14 @@
         if (this.dashing) {
           ctx.beginPath();
           ctx.arc(0, 0, this.radius + 5, 0, Math.PI * 2);
-          ctx.fillStyle = 'rgba(0, 200, 255, 0.3)';
+          ctx.fillStyle = hellMode ? 'rgba(255, 100, 100, 0.3)' : 'rgba(0, 200, 255, 0.3)';
           ctx.fill();
         }
         
         if (this.shieldActive) {
           ctx.beginPath();
           ctx.arc(0, 0, this.radius + 15, 0, Math.PI * 2);
-          ctx.strokeStyle = 'rgba(0, 150, 255, 0.7)';
+          ctx.strokeStyle = hellMode ? 'rgba(255, 100, 100, 0.7)' : 'rgba(0, 150, 255, 0.7)';
           ctx.lineWidth = 4;
           ctx.stroke();
           
@@ -560,12 +642,12 @@
               Math.sin(shieldAngle) * (this.radius + 10),
               3, 0, Math.PI * 2
             );
-            ctx.fillStyle = 'rgba(0, 200, 255, 0.8)';
+            ctx.fillStyle = hellMode ? 'rgba(255, 100, 100, 0.8)' : 'rgba(0, 200, 255, 0.8)';
             ctx.fill();
           }
         }
         
-        ctx.fillStyle = this.invulnerable ? "#00ffff" : "#00ff88";
+        ctx.fillStyle = this.invulnerable ? (hellMode ? "#ff5555" : "#00ffff") : (hellMode ? "#ff0000" : "#00ff88");
         ctx.beginPath();
         ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
         ctx.fill();
@@ -573,7 +655,7 @@
         ctx.fillStyle = "#8B4513";
         ctx.fillRect(0, -7, 40, 14);
         
-        ctx.fillStyle = this.invulnerable ? "#00aaff" : "#00aa77";
+        ctx.fillStyle = this.invulnerable ? (hellMode ? "#ff5555" : "#00aaff") : (hellMode ? "#aa0000" : "#00aa77");
         ctx.beginPath();
         ctx.arc(0, 0, this.radius - 8, 0, Math.PI * 2);
         ctx.fill();
@@ -600,14 +682,17 @@
       takeDamage(amount) {
         if (!this.shieldActive && !this.invulnerable) {
           this.health -= amount;
-          sounds.playerHit.play();
           
           this.combo = 0;
           this.comboTimer = 0;
           
-          ctx.fillStyle = 'rgba(255, 0, 0, 0.5)';
+          ctx.fillStyle = hellMode ? 'rgba(255, 0, 0, 0.7)' : 'rgba(255, 0, 0, 0.5)';
           ctx.fillRect(0, 0, canvas.width, canvas.height);
         }
+      }
+      
+      applyBurn(duration) {
+        this.burnTimer = Math.max(this.burnTimer, duration * 60);
       }
     }
 
@@ -642,7 +727,7 @@
           this.alive = false;
           
           if (this.specialEffect === 'explosive') {
-            explosions.push(new Explosion(this.x, this.y, 72)); // Aumentado em 20% (60 -> 72)
+            explosions.push(new Explosion(this.x, this.y, 72));
           }
         }
       }
@@ -690,8 +775,8 @@
           ctx.fill();
         } else {
           const gradient = ctx.createLinearGradient(0, -3, 25, 0);
-          gradient.addColorStop(0, '#00ff88');
-          gradient.addColorStop(1, '#00ffff');
+          gradient.addColorStop(0, hellMode ? '#ff0000' : '#00ff88');
+          gradient.addColorStop(1, hellMode ? '#ff5555' : '#00ffff');
           
           ctx.fillStyle = gradient;
           ctx.fillRect(0, -3, 25, 6);
@@ -704,7 +789,7 @@
           ctx.fillStyle = 'silver';
           ctx.fill();
           
-          ctx.fillStyle = '#ff00ff';
+          ctx.fillStyle = hellMode ? '#ff5555' : '#ff00ff';
           ctx.beginPath();
           ctx.moveTo(0, -3);
           ctx.lineTo(-5, -6);
@@ -712,7 +797,7 @@
           ctx.closePath();
           ctx.fill();
           
-          ctx.fillStyle = '#00ffff';
+          ctx.fillStyle = hellMode ? '#ff8888' : '#00ffff';
           ctx.beginPath();
           ctx.moveTo(0, 3);
           ctx.lineTo(-5, 6);
@@ -743,7 +828,7 @@
             this.radius = 18;
             this.speed = 2.5 + wave * 0.07;
             this.health = 40 + wave * 3;
-            this.color = "#ff5555";
+            this.color = hellMode ? "#ff8888" : "#ff5555";
             this.damage = 0.5;
             this.scoreValue = 10;
             break;
@@ -751,15 +836,15 @@
             this.radius = 22;
             this.speed = 2 + wave * 0.05;
             this.health = 100 + wave * 6;
-            this.color = "#aa0000";
+            this.color = hellMode ? "#ff3333" : "#aa0000";
             this.damage = 0.8;
             this.scoreValue = 25;
             break;
           case 3: 
             this.radius = 15;
-            this.speed = 3.6 + wave * 0.09; // 10% mais devagar (4 -> 3.6)
+            this.speed = 3.6 + wave * 0.09;
             this.health = 30 + wave * 2;
-            this.color = "#ffaa00";
+            this.color = hellMode ? "#ffcc00" : "#ffaa00";
             this.damage = 0.3;
             this.scoreValue = 15;
             break;
@@ -767,7 +852,7 @@
             this.radius = 30;
             this.speed = 1.2 + wave * 0.03;
             this.health = 200 + wave * 10;
-            this.color = "#5555ff";
+            this.color = hellMode ? "#8888ff" : "#5555ff";
             this.damage = 1.2;
             this.scoreValue = 40;
             break;
@@ -775,17 +860,17 @@
             this.radius = 20;
             this.speed = 2 + wave * 0.06;
             this.health = 70 + wave * 4;
-            this.color = "#aa00aa";
+            this.color = hellMode ? "#ff00ff" : "#aa00aa";
             this.damage = 0.6;
             this.shootCooldown = 0;
             this.shootingRange = 300;
             this.scoreValue = 30;
             break;
           case 6: // Wave 5 Boss
-            this.radius = 45;
+            this.radius = 55;
             this.speed = player.speed * 0.85;
             this.health = 500 + wave * 40;
-            this.color = "#ff00ff";
+            this.color = hellMode ? "#ff00ff" : "#ff00ff";
             this.damage = 2;
             this.shootCooldown = 0;
             this.fireTrailCooldown = 0;
@@ -793,10 +878,10 @@
             this.scoreValue = 200;
             break;
           case 7: // Wave 10 Boss
-            this.radius = 45;
+            this.radius = 55;
             this.speed = player.speed * 0.75;
             this.health = (500 + wave * 40) * 1.4;
-            this.color = "#ffff00";
+            this.color = hellMode ? "#ffff00" : "#ffff00";
             this.damage = 2;
             this.shootCooldown = 0;
             this.specialCooldown = 0;
@@ -806,13 +891,27 @@
             this.radius = 70;
             this.speed = player.speed * 0.8;
             this.health = (500 + wave * 40) * 2;
-            this.color = "#ff4500";
+            this.color = hellMode ? "#ff4500" : "#ff4500";
             this.damage = 3;
             this.shootCooldown = 0;
             this.minionCooldown = 0;
             this.phase = 1;
             this.auraActive = false;
             this.scoreValue = 1000;
+            break;
+          case 9: // Hell Boss - Devorador de Almas
+            this.radius = 80;
+            this.speed = 0; // Não se move normalmente
+            this.health = (500 + wave * 40) * 2.3; // 30% mais que o boss final
+            this.damage = 1;
+            this.color = "#330033";
+            this.shootCooldown = 0;
+            this.meteorCooldown = 0;
+            this.teleportCooldown = 0;
+            this.radialAttackCooldown = 0;
+            this.eyesColor = "#9900ff";
+            this.auraColor = "#ff0000";
+            this.scoreValue = 2000;
             break;
         }
         
@@ -821,6 +920,9 @@
         this.slowTimer = 0;
         this.hitFlash = 0;
         this.stunnedTimer = 0;
+        this.frozenColor = "#00aaff";
+        this.isFrozen = false;
+        
       }
 
       update() {
@@ -832,10 +934,14 @@
         if (this.slowTimer > 0) {
           this.slowTimer--;
           this.speed = this.originalSpeed * 0.3;
+          this.isFrozen = true;
+          
+         
         } else {
           this.speed = this.originalSpeed;
+          this.isFrozen = false;
         }
-        
+
         if (this.hitFlash > 0) this.hitFlash--;
 
         if (this.type === 5) { // Inimigo roxo (atirador)
@@ -846,14 +952,16 @@
             const angle = Math.atan2(player.y - this.y, player.x - this.x);
             this.x += Math.cos(angle) * this.speed;
             this.y += Math.sin(angle) * this.speed;
-          } else {
-            // Stop and shoot
-            if (this.shootCooldown <= 0) {
-              const shootAngle = Math.atan2(player.y - this.y, player.x - this.x);
-              enemyProjectiles.push(new EnemyProjectile(this.x, this.y, shootAngle, this.type));
-              this.shootCooldown = 100;
-            }
           }
+          
+          // Atira continuamente com cooldown de 1.5 segundos (90 frames)
+          if (this.shootCooldown <= 0) {
+            const shootAngle = Math.atan2(player.y - this.y, player.x - this.x);
+            enemyProjectiles.push(new EnemyProjectile(this.x, this.y, shootAngle, this.type));
+            this.shootCooldown = 90;
+          }
+          
+          if (this.shootCooldown > 0) this.shootCooldown--;
         }
         else if (this.type === 6 || this.type === 7 || this.type === 8) {
           const angle = Math.atan2(player.y - this.y, player.x - this.x);
@@ -918,7 +1026,51 @@
           }
           
           if (this.shootCooldown > 0) this.shootCooldown--;
-        } else {
+        } 
+        else if (this.type === 9) { // Devorador de Almas
+          // Teleporta a cada 1.5 segundos (90 frames)
+          this.teleportCooldown--;
+          if (this.teleportCooldown <= 0) {
+            this.x = Math.random() * (canvas.width - 200) + 100;
+            this.y = Math.random() * (canvas.height - 200) + 100;
+            this.teleportCooldown = 90;
+          }
+          
+          // Ataque frontal em leque (3 projéteis) a cada 2 segundos (120 frames)
+          this.shootCooldown--;
+          if (this.shootCooldown <= 0) {
+            const angle = Math.atan2(player.y - this.y, player.x - this.x);
+            for (let i = -1; i <= 1; i++) {
+              enemyProjectiles.push(new EnemyProjectile(this.x, this.y, angle + (i * 0.3), this.type));
+            }
+            this.shootCooldown = 240;
+          }
+          
+          // Ataques laterais (2 projéteis que perseguem) a cada 2 segundos (sincronizado com o frontal)
+          if (this.shootCooldown === 180) {
+            const angle = Math.atan2(player.y - this.y, player.x - this.x);
+            enemyProjectiles.push(new EnemyProjectile(this.x, this.y, angle + Math.PI/2, 'homing'));
+            enemyProjectiles.push(new EnemyProjectile(this.x, this.y, angle - Math.PI/2, 'homing'));
+          }
+          
+          // Meteoro negro a cada 4 segundos (240 frames)
+          this.meteorCooldown--;
+          if (this.meteorCooldown <= 0) {
+            darkMeteors.push(new DarkMeteor(player.x, player.y));
+            this.meteorCooldown = 240;
+          }
+          
+          // Ataque radial (30 projéteis) a cada 10 segundos (600 frames)
+          this.radialAttackCooldown--;
+          if (this.radialAttackCooldown <= 0) {
+            for (let i = 0; i < 30; i++) {
+              const angle = (i / 30) * Math.PI * 2;
+              enemyProjectiles.push(new EnemyProjectile(this.x, this.y, angle, 'burning'));
+            }
+            this.radialAttackCooldown = 600;
+          }
+        } 
+        else {
           // Move towards player
           const angle = Math.atan2(player.y - this.y, player.x - this.x);
           this.x += Math.cos(angle) * this.speed;
@@ -937,7 +1089,8 @@
           ctx.fill();
         }
         
-        ctx.fillStyle = this.color;
+        // Desenha o inimigo congelado azul se estiver sob efeito de congelamento
+        ctx.fillStyle = this.isFrozen ? this.frozenColor : this.color;
         ctx.beginPath();
         ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
         ctx.fill();
@@ -994,11 +1147,49 @@
             ctx.beginPath();
             ctx.arc(10, 0, 5, 0, Math.PI);
             ctx.fill();
+            break;
+          case 9: // Devorador de Almas
+            // Aura
+            ctx.strokeStyle = this.auraColor;
+            ctx.lineWidth = 8;
+            ctx.beginPath();
+            ctx.arc(0, 0, this.radius + 25, 0, Math.PI * 2);
+            ctx.stroke();
+            
+            // Corpo
+            ctx.fillStyle = this.color;
+            ctx.beginPath();
+            ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Olhos
+            ctx.fillStyle = this.eyesColor;
+            ctx.beginPath();
+            ctx.arc(-15, -10, 10, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(15, -10, 10, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Boca
+            ctx.fillStyle = "black";
+            ctx.beginPath();
+            ctx.arc(0, 10, 15, 0, Math.PI);
+            ctx.fill();
+            
+            // Brilho nos olhos
+            ctx.fillStyle = "white";
+            ctx.beginPath();
+            ctx.arc(-12, -15, 3, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(18, -15, 3, 0, Math.PI * 2);
+            ctx.fill();
         }
         
         ctx.restore();
         
-        if (this.type === 6 || this.type === 7 || this.type === 8) {
+        if (this.type === 6 || this.type === 7 || this.type === 8 || this.type === 9) {
           ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
           ctx.fillRect(this.x - this.radius, this.y - this.radius - 20, this.radius * 2, 8);
           ctx.fillStyle = this.health > this.maxHealth / 2 ? "lime" : "red";
@@ -1015,14 +1206,8 @@
             ctx.fillText("BOSS DOURADO", this.x, this.y - this.radius - 35);
           } else if (this.type === 8) {
             ctx.fillText("BOSS FINAL", this.x, this.y - this.radius - 35);
-            
-            if (this.auraActive) {
-              ctx.strokeStyle = "rgba(255, 0, 0, 0.5)";
-              ctx.lineWidth = 8;
-              ctx.beginPath();
-              ctx.arc(this.x, this.y, this.radius + 25, 0, Math.PI * 2);
-              ctx.stroke();
-            }
+          } else if (this.type === 9) {
+            ctx.fillText("DEVORADOR DE ALMAS", this.x, this.y - this.radius - 35);
           }
           ctx.textAlign = "start";
         }
@@ -1039,7 +1224,6 @@
       takeDamage(amount) {
         this.health -= amount;
         this.hitFlash = 3;
-        sounds.enemyHit.play();
       }
       
       stun(duration) {
@@ -1097,17 +1281,34 @@
           this.color = "cyan";
           this.isEnergyBall = true;
           this.homing = false;
-        } else {
+        } 
+        else if (enemyType === 'homing') {
+          this.speed = 4;
+          this.damage = 15;
+          this.radius = 8;
+          this.color = "#ff00ff";
+          this.homing = true;
+          this.homingPower = 0.08;
+        }
+        else if (enemyType === 'burning') {
+          this.speed = 5;
+          this.damage = 10;
+          this.radius = 6;
+          this.color = "#ff0000";
+          this.homing = false;
+          this.burning = true;
+        }
+        else {
           this.speed = enemyType === 7 ? 6 : enemyType === 6 ? 7 : 5;
           this.damage = enemyType === 7 ? 10 : enemyType === 6 ? 15 : 8;
           this.radius = enemyType === 7 ? 8 : enemyType === 6 ? 10 : 6;
           this.color = enemyType === 7 ? "yellow" : enemyType === 6 ? "purple" : "orange";
           this.isEnergyBall = false;
-          this.homing = enemyType === 8;
+          this.homing = enemyType === 9;
+          this.homingPower = enemyType === 9 ? 0.05 : 0;
         }
         
         this.alive = true;
-        this.homingPower = 0.05;
       }
 
       update() {
@@ -1148,6 +1349,22 @@
           gradient.addColorStop(1, 'rgba(0, 255, 255, 0)');
           ctx.fillStyle = gradient;
           ctx.fill();
+        } else if (this.burning) {
+          ctx.fillStyle = this.color;
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+          ctx.fill();
+          
+          // Efeito de chama
+          for (let i = 0; i < 3; i++) {
+            ctx.beginPath();
+            ctx.moveTo(this.x, this.y - this.radius);
+            ctx.lineTo(this.x + this.radius * 0.7, this.y + this.radius * 0.5);
+            ctx.lineTo(this.x - this.radius * 0.7, this.y + this.radius * 0.5);
+            ctx.closePath();
+            ctx.fillStyle = `rgba(255, ${150 + i * 50}, 0, 0.7)`;
+            ctx.fill();
+          }
         } else {
           ctx.fillStyle = this.color;
           ctx.beginPath();
@@ -1161,6 +1378,81 @@
           ctx.lineTo(this.x, this.y);
           ctx.stroke();
         }
+      }
+    }
+
+    class DarkMeteor {
+      constructor(targetX, targetY) {
+        this.x = Math.random() * canvas.width;
+        this.y = -100;
+        this.targetX = targetX;
+        this.targetY = targetY;
+        this.speed = 15;
+        this.radius = 30;
+        this.damage = 50;
+        this.impacted = false;
+        this.lavaDuration = 300; // 5 segundos
+        this.lavaRadius = 70;
+      }
+      
+      update() {
+        if (!this.impacted) {
+          // Move towards target
+          const angle = Math.atan2(this.targetY - this.y, this.targetX - this.x);
+          this.x += Math.cos(angle) * this.speed;
+          this.y += Math.sin(angle) * this.speed;
+          
+          // Check if reached target
+          if (Math.hypot(this.targetX - this.x, this.targetY - this.y) < 10) {
+            this.impacted = true;
+            
+            // Cria mancha de lava
+            lavaPatches.push({
+              x: this.x,
+              y: this.y,
+              radius: this.lavaRadius,
+              lifetime: this.lavaDuration
+            });
+            
+            // Dano ao jogador se estiver perto
+            if (Math.hypot(player.x - this.x, player.y - this.y) < player.radius + this.radius) {
+              player.takeDamage(this.damage);
+            }
+          }
+        }
+      }
+      
+      draw() {
+        if (!this.impacted) {
+          // Draw falling meteor
+          ctx.save();
+          ctx.translate(this.x, this.y);
+          
+          // Meteor core
+          const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, this.radius);
+          gradient.addColorStop(0, '#660066');
+          gradient.addColorStop(0.7, '#330033');
+          gradient.addColorStop(1, '#000000');
+          
+          ctx.fillStyle = gradient;
+          ctx.beginPath();
+          ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+          ctx.fill();
+          
+          // Meteor trail
+          ctx.strokeStyle = 'rgba(150, 0, 150, 0.7)';
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.moveTo(0, 0);
+          ctx.lineTo(-this.speed * 2, -this.speed * 3);
+          ctx.stroke();
+          
+          ctx.restore();
+        }
+      }
+      
+      isActive() {
+        return !this.impacted;
       }
     }
 
@@ -1200,12 +1492,12 @@
         ctx.beginPath();
         ctx.arc(0, 0, this.radius + 5, 0, Math.PI * 2);
         const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, this.radius + 5);
-        gradient.addColorStop(0, 'rgba(0, 255, 255, 0.3)');
-        gradient.addColorStop(1, 'rgba(0, 255, 255, 0)');
+        gradient.addColorStop(0, hellMode ? 'rgba(255, 100, 100, 0.3)' : 'rgba(0, 255, 255, 0.3)');
+        gradient.addColorStop(1, hellMode ? 'rgba(255, 50, 50, 0)' : 'rgba(0, 255, 255, 0)');
         ctx.fillStyle = gradient;
         ctx.fill();
         
-        ctx.strokeStyle = "cyan";
+        ctx.strokeStyle = hellMode ? "#ff5555" : "cyan";
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
@@ -1227,7 +1519,7 @@
             ctx.fill();
             break;
           case "rapid":
-            ctx.fillStyle = "cyan";
+            ctx.fillStyle = hellMode ? "#ff5555" : "cyan";
             ctx.fillRect(-10, -4, 20, 8);
             ctx.fillRect(-4, -10, 8, 20);
             break;
@@ -1250,7 +1542,7 @@
             }
             break;
           case "shield":
-            ctx.strokeStyle = "rgba(0, 200, 255, 0.8)";
+            ctx.strokeStyle = hellMode ? "rgba(255, 100, 100, 0.8)" : "rgba(0, 200, 255, 0.8)";
             ctx.lineWidth = 3;
             ctx.beginPath();
             ctx.arc(0, 0, 12, 0, Math.PI * 2);
@@ -1288,9 +1580,9 @@
         this.targetY = targetY;
         this.speed = 15;
         this.radius = 30;
-        this.damage = 54; // 40% do dano da explosão (135 * 0.4)
+        this.damage = 54;
         this.impacted = false;
-        this.fireDuration = 180; // 3 segundos
+        this.fireDuration = 180;
         this.fireRadius = 80;
       }
       
@@ -1304,7 +1596,6 @@
           // Check if reached target
           if (Math.hypot(this.targetX - this.x, this.targetY - this.y) < 10) {
             this.impacted = true;
-            sounds.explosion.play();
             
             // Damage enemies in radius
             [...enemies, ...bosses].forEach(e => {
@@ -1361,11 +1652,11 @@
           ctx.fill();
           
           // Damage enemies in fire
-          if (this.fireDuration % 10 === 0) { // Damage every 10 frames
+          if (this.fireDuration % 10 === 0) {
             [...enemies, ...bosses].forEach(e => {
               const dist = Math.hypot(this.x - e.x, this.y - e.y);
               if (dist < this.fireRadius) {
-                e.takeDamage(5); // Burn damage
+                e.takeDamage(10);
               }
             });
           }
@@ -1382,8 +1673,7 @@
       
       switch(selectedSpecial) {
         case "explosive":
-          explosions.push(new Explosion(player.x, player.y, 180)); // Aumentado em 20% (150 -> 180)
-          sounds.explosion.play();
+          explosions.push(new Explosion(player.x, player.y, 180));
           
           [...enemies, ...bosses].forEach(e => {
             const dist = Math.hypot(player.x - e.x, player.y - e.y);
@@ -1399,40 +1689,39 @@
           break;
           
         case "multi":
-          sounds.shoot.play();
           for (let i = -7; i <= 7; i++) {
             arrows.push(new Arrow(player.x, player.y, angle + i * 0.1));
           }
           break;
           
         case "freeze":
-          sounds.freeze.play();
           enemies.forEach(e => {
             e.speed *= 0.1;
             e.slowTimer = 360; 
+            e.isFrozen = true;
           });
           bosses.forEach(b => {
             b.speed *= 0.3;
             b.slowTimer = 180; 
+            b.isFrozen = true;
           });
           freezeEffects.push(new FreezeEffect(player.x, player.y));
           break;
           
         case "lightning":
-          sounds.lightning.play();
           const lightningTargets = [...enemies, ...bosses].filter(e => 
             Math.hypot(player.x - e.x, player.y - e.y) < 250
           ).sort((a, b) => 
             Math.hypot(player.x - a.x, player.y - a.y) - Math.hypot(player.x - b.x, player.y - b.y)
-          ).slice(0, 12); // Aumentado para 12 inimigos
+          ).slice(0, 12);
           
           if (lightningTargets.length > 0) {
             lightningEffects.push(new LightningEffect(player, lightningTargets));
             
             lightningTargets.forEach((target, i) => {
               target.takeDamage(75 / (i + 1));
-              target.stun(30); // Paralisado por 0.5 segundos (30 frames)
-              if (target.type === 5 || target.type === 6 || target.type === 7 || target.type === 8) {
+              target.stun(30);
+              if (target.type === 5 || target.type === 6 || target.type === 7 || target.type === 8 || target.type === 9) {
                 target.shootCooldown += 90; 
               }
             });
@@ -1440,82 +1729,19 @@
           break;
           
         case "shield":
-          sounds.shield.play();
           player.shieldActive = true;
-          player.shieldTimer = 360; 
+          player.shieldTimer = 360;
           break;
           
         case "meteor":
-          sounds.meteor.play();
-         
-          
-          setTimeout(() => {
-            if (enemies.length > 0 || bosses.length > 0) {
-              const target = enemies[0] || bosses[0];
-              meteors.push(new Meteor(target.x, target.y));
-            }
-          }, 0);
-          
-          setTimeout(() => {
-            if (enemies.length > 1 || bosses.length > 0) {
-              const target = enemies[1] || bosses[0];
-              meteors.push(new Meteor(target.x, target.y));
-            }
-          }, 500);
-          
-          setTimeout(() => {
-            if (enemies.length > 2 || bosses.length > 0) {
-              const target = enemies[2] || bosses[0];
-              meteors.push(new Meteor(target.x, target.y));
-            }
-          }, 1000);
-          
-           
-          setTimeout(() => {
-            if (enemies.length > 3 || bosses.length > 0) {
-              const target = enemies[3] || bosses[0];
-              meteors.push(new Meteor(target.x, target.y));
-            }
-          }, 1500);
-          
-           
-          setTimeout(() => {
-            if (enemies.length > 4 || bosses.length > 0) {
-              const target = enemies[4] || bosses[0];
-              meteors.push(new Meteor(target.x, target.y));
-            }
-          }, 2000);
-          
-           
-          setTimeout(() => {
-            if (enemies.length > 5 || bosses.length > 0) {
-              const target = enemies[5] || bosses[0];
-              meteors.push(new Meteor(target.x, target.y));
-            }
-          }, 2500);
-          
-           
-          setTimeout(() => {
-            if (enemies.length > 6 || bosses.length > 0) {
-              const target = enemies[6] || bosses[0];
-              meteors.push(new Meteor(target.x, target.y));
-            }
-          }, 3000);
-          
-           
-          setTimeout(() => {
-            if (enemies.length > 7 || bosses.length > 0) {
-              const target = enemies[7] || bosses[0];
-              meteors.push(new Meteor(target.x, target.y));
-            }
-          }, 3500);
-          
-           setTimeout(() => {
-            if (enemies.length > 8 || bosses.length > 0) {
-              const target = enemies[8] || bosses[0];
-              meteors.push(new Meteor(target.x, target.y));
-            }
-          }, 4000);
+          // Spawna meteoros em posições aleatórias
+          for (let i = 0; i < 18; i++) {
+            setTimeout(() => {
+              const x = Math.random() * (canvas.width - 200) + 100;
+              const y = Math.random() * (canvas.height - 200) + 100;
+              meteors.push(new Meteor(x, y));
+            }, i * 250);
+          }
           break;
       }
     }
@@ -1653,7 +1879,7 @@
     function drawHUD() {
       ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
       ctx.fillRect(20, 20, 250, 35);
-      ctx.fillStyle = player.health > 50 ? "#00ff88" : player.health > 20 ? "orange" : "red";
+      ctx.fillStyle = player.health > 50 ? (hellMode ? "#ff0000" : "#00ff88") : player.health > 20 ? "orange" : "red";
       ctx.fillRect(20, 20, 250 * (player.health / player.maxHealth), 35);
       ctx.strokeStyle = "white";
       ctx.strokeRect(20, 20, 250, 35);
@@ -1697,7 +1923,7 @@
       
       ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
       ctx.fillRect(20, 70, 250, 25);
-      ctx.fillStyle = cooldownWidth >= 250 ? "gold" : "#00ffff";
+      ctx.fillStyle = cooldownWidth >= 250 ? "gold" : (hellMode ? "#ff5555" : "#00ffff");
       ctx.fillRect(20, 70, cooldownWidth, 25);
       ctx.strokeStyle = "white";
       ctx.strokeRect(20, 70, 250, 25);
@@ -1707,7 +1933,7 @@
         ctx.fillText("ESPECIAL PRONTO (E)", 30, 90);
       }
       
-      ctx.fillStyle = "#00ff88";
+      ctx.fillStyle = hellMode ? "#ff5555" : "#00ff88";
       ctx.font = "14px 'Press Start 2P', cursive";
       let specialName = "";
       switch(selectedSpecial) {
@@ -1721,7 +1947,7 @@
       ctx.fillText(`PODER: ${specialName}`, 20, 120);
       
       if (player.shieldActive) {
-        ctx.fillStyle = "rgba(0, 200, 255, 0.8)";
+        ctx.fillStyle = hellMode ? "rgba(255, 100, 100, 0.8)" : "rgba(0, 200, 255, 0.8)";
         ctx.fillText(`ESCUDO: ${Math.ceil(player.shieldTimer / 60)}s`, 20, 150);
       }
       
@@ -1731,11 +1957,16 @@
       }
       
       if (player.rapidFireActive) {
-        ctx.fillStyle = "rgba(0, 255, 255, 0.8)";
+        ctx.fillStyle = hellMode ? "rgba(255, 150, 150, 0.8)" : "rgba(0, 255, 255, 0.8)";
         ctx.fillText(`TIRO RÁPIDO: ${Math.ceil(player.rapidFireTimer / 60)}s`, 20, 210);
       }
       
-      ctx.fillStyle = "gold";
+      if (player.burnTimer > 0) {
+        ctx.fillStyle = "rgba(255, 100, 0, 0.8)";
+        ctx.fillText(`QUEIMANDO: ${Math.ceil(player.burnTimer / 60)}s`, 20, 240);
+      }
+      
+      ctx.fillStyle = hellMode ? "#ff5555" : "gold";
       ctx.textAlign = "right";
       ctx.fillText(`PONTOS: ${score}`, canvas.width - 30, 40);
       ctx.fillText(`RECORDE: ${highScore}`, canvas.width - 30, 70);
@@ -1749,7 +1980,7 @@
       
       if (player.dashCooldown > 0) {
         ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
-        ctx.fillText(`DASH: ${Math.ceil(player.dashCooldown / 60)}s`, 20, 240);
+        ctx.fillText(`DASH: ${Math.ceil(player.dashCooldown / 60)}s`, 20, hellMode ? 270 : 240);
       }
     }
 
@@ -1757,8 +1988,10 @@
       const count = 5 + wave * 3;
       const bossWave = wave % 5 === 0;
       const finalBossWave = wave === 15;
+      const hellBossWave = wave === 20;
       
       enemies = [];
+      bosses = [];
       
       // Reset player position to center
       if (player) {
@@ -1766,7 +1999,12 @@
         player.y = canvas.height / 2;
       }
       
-      if (finalBossWave) {
+      if (hellBossWave) {
+        // wave 20 - boss infernal
+        bosses.push(new Enemy(9, wave));
+        waveDisplay.textContent = `WAVE: ${wave} (DEVORADOR DE ALMAS)`;
+      }
+      else if (finalBossWave) {
         // wave 15 - boss final
         bosses.push(new Enemy(8, wave));
         waveDisplay.textContent = `WAVE: ${wave} (BOSS FINAL)`;
@@ -1810,7 +2048,8 @@
     }
 
     function showWaveStart(wave) {
-      const waveText = wave === 15 ? "BOSS FINAL" : 
+      const waveText = wave === 20 ? "DEVORADOR DE ALMAS" : 
+                      wave === 15 ? "BOSS FINAL" : 
                       wave === 10 ? "BOSS DOURADO" : 
                       wave === 5 ? "BOSS" : 
                       `WAVE ${wave}`;
@@ -1822,12 +2061,12 @@
       // Wave box
       ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
       ctx.fillRect(canvas.width / 2 - 200, canvas.height / 2 - 80, 400, 160);
-      ctx.strokeStyle = "#00ff88";
+      ctx.strokeStyle = hellMode ? "#ff0000" : "#00ff88";
       ctx.lineWidth = 5;
       ctx.strokeRect(canvas.width / 2 - 200, canvas.height / 2 - 80, 400, 160);
       
       // Wave text
-      ctx.fillStyle = "#00ffff";
+      ctx.fillStyle = hellMode ? "#ff5555" : "#00ffff";
       ctx.font = "48px 'Bangers', cursive";
       ctx.textAlign = "center";
       ctx.fillText(waveText, canvas.width / 2, canvas.height / 2 - 20);
@@ -1846,7 +2085,7 @@
     }
 
     let player, arrows, enemies, bosses, powerUps, enemyProjectiles;
-    let explosions, freezeEffects, lightningEffects, meteors;
+    let explosions, freezeEffects, lightningEffects, meteors, darkMeteors, lavaPatches;
     let currentWave, waveTimer, gameOver;
 
     function init() {
@@ -1860,9 +2099,16 @@
       freezeEffects = [];
       lightningEffects = [];
       meteors = [];
+      darkMeteors = [];
+      lavaPatches = [];
       
-      currentWave = 1;
-      waveTimer = 180; 
+      if (hellMode) {
+        currentWave = 16;
+      } else {
+        currentWave = 1;
+      }
+      
+      waveTimer = 180;
       gameOver = false;
       
       spawnEnemiesForWave(currentWave);
@@ -1872,21 +2118,42 @@
     function gameLoop() {
       if (!gameActive) return;
       
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      
-      ctx.fillStyle = "white";
-      for (let i = 0; i < 150; i++) {
-        const alpha = Math.random() * 0.8 + 0.2;
-        const size = Math.random() * 3 + 1;
-        ctx.globalAlpha = alpha;
-        ctx.fillRect(
-          Math.random() * canvas.width,
-          Math.random() * canvas.height,
-          size, size
-        );
+      // Fundo diferente para o modo inferno
+      if (hellMode) {
+        // Fundo vulcânico/infernal
+        ctx.fillStyle = '#290a0a';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        // Efeitos de lava/fogo
+        for (let i = 0; i < 30; i++) {
+          const x = Math.random() * canvas.width;
+          const y = Math.random() * canvas.height;
+          const size = Math.random() * 10 + 5;
+          const alpha = Math.random() * 0.3 + 0.1;
+          
+          ctx.fillStyle = `rgba(255, ${100 + Math.random() * 100}, 0, ${alpha})`;
+          ctx.beginPath();
+          ctx.arc(x, y, size, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      } else {
+        // Fundo normal estrelado
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        ctx.fillStyle = "white";
+        for (let i = 0; i < 150; i++) {
+          const alpha = Math.random() * 0.8 + 0.2;
+          const size = Math.random() * 3 + 1;
+          ctx.globalAlpha = alpha;
+          ctx.fillRect(
+            Math.random() * canvas.width,
+            Math.random() * canvas.height,
+            size, size
+          );
+        }
+        ctx.globalAlpha = 1;
       }
-      ctx.globalAlpha = 1;
 
       if (player.health <= 0) {
         gameOver = true;
@@ -1910,11 +2177,10 @@
           ctx.fillText("NOVO RECORDE!", canvas.width / 2, canvas.height / 2 + 100);
         }
         
-        ctx.fillStyle = "#00ff88";
+        ctx.fillStyle = hellMode ? "#ff5555" : "#00ff88";
         ctx.fillText("CLIQUE PARA VOLTAR AO MENU", canvas.width / 2, canvas.height / 2 + 150);
         ctx.textAlign = "start";
         
-        sounds.gameOver.play();
         canvas.addEventListener('click', backToMenu, { once: true });
         return;
       }
@@ -1958,9 +2224,11 @@
         
         if (Math.hypot(player.x - p.x, player.y - p.y) < player.radius + p.radius) {
           player.takeDamage(p.damage);
-          if (p.isEnergyBall) {
-            player.slowTimer = 90; 
+          
+          if (p.burning) {
+            player.applyBurn(3); // Queimação por 3 segundos
           }
+          
           p.alive = false;
         }
       });
@@ -1970,14 +2238,13 @@
         p.draw();
         
         if (Math.hypot(player.x - p.x, player.y - p.y) < player.radius + p.radius) {
-          sounds.powerup.play();
           switch(p.type) {
             case "heal":
               player.health = Math.min(player.maxHealth, player.health + 40);
               break;
             case "rapid":
               player.rapidFireActive = true;
-              player.rapidFireTimer = 240; // 4 segundos
+              player.rapidFireTimer = 240;
               break;
             case "special":
               for (const key in player.specialCooldowns) {
@@ -1986,7 +2253,7 @@
               break;
             case "shield":
               player.shieldActive = true;
-              player.shieldTimer = 180; 
+              player.shieldTimer = 180;
               break;
             case "maxhp":
               player.maxHealth += 15;
@@ -2002,6 +2269,41 @@
       meteors.forEach(m => {
         m.update();
         m.draw();
+      });
+
+      // Update and draw dark meteors
+      darkMeteors = darkMeteors.filter(m => m.isActive());
+      darkMeteors.forEach(m => {
+        m.update();
+        m.draw();
+      });
+
+      // Update and draw lava patches
+      lavaPatches = lavaPatches.filter(p => p.lifetime > 0);
+      lavaPatches.forEach(p => {
+        p.lifetime--;
+        
+        // Desenha a mancha de lava
+        const gradient = ctx.createRadialGradient(
+          p.x, p.y, 0,
+          p.x, p.y, p.radius
+        );
+        gradient.addColorStop(0, 'rgba(150, 0, 150, 0.8)');
+        gradient.addColorStop(0.7, 'rgba(100, 0, 100, 0.4)');
+        gradient.addColorStop(1, 'rgba(50, 0, 50, 0)');
+        
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Dano ao jogador se estiver na lava
+        if (Math.hypot(player.x - p.x, player.y - p.y) < player.radius + p.radius) {
+          player.slowTimer = 18; // 30% de slow por 0.3 segundos
+          if (p.lifetime % 60 === 0) { // Dano a cada segundo
+            player.takeDamage(10);
+          }
+        }
       });
 
       arrows.forEach(a => {
@@ -2028,7 +2330,7 @@
         
         bosses.forEach(b => {
           if (Math.hypot(a.x - b.x, a.y - b.y) < b.radius) {
-            b.takeDamage(a.damage * 0.6); 
+            b.takeDamage(a.damage * 0.6);
             
             if (b.health <= 0) {
               score += b.scoreValue * (1 + player.combo * 0.2);
@@ -2058,9 +2360,17 @@
       if (enemies.length === 0 && bosses.length === 0 && waveTimer <= 0) {
         currentWave++;
         
-        if (currentWave > 15) {
+        if (currentWave > 20) {
+          hellVictoryScreen.style.display = 'flex';
+          
+          if (score > highScore) {
+            highScore = score;
+            localStorage.setItem('highScore', highScore);
+          }
+          return;
+        }
+        else if (currentWave > 15 && !hellMode) {
           victoryScreen.style.display = 'flex';
-          sounds.victory.play();
           
           if (score > highScore) {
             highScore = score;
@@ -2069,7 +2379,7 @@
           return;
         }
         
-        waveTimer = 180; 
+        waveTimer = 180;
         spawnEnemiesForWave(currentWave);
       }
 
