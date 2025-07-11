@@ -334,7 +334,7 @@
       <div class="power-option" onclick="selectPower('lightning')">
        <div class="character-icon">⚡</div>
         <div>RELÂMPAGO</div>
-        <div class="power-description">Eletrocuta até 12 inimigos próximos, deixando-os paralisados por 0.5s!</div>
+        <div class="power-description">Eletrocuta até 12 inimigos próximos, deixando-os paralisados por alguns instantes!</div>
       </div>
       <div class="power-option" onclick="selectPower('shield')">
         <div class="character-icon">🔰</div>
@@ -1689,8 +1689,8 @@
           break;
           
         case "multi":
-          for (let i = -7; i <= 7; i++) {
-            arrows.push(new Arrow(player.x, player.y, angle + i * 0.1));
+          for (let i = -11; i <= 11; i++) {
+            arrows.push(new Arrow(player.x, player.y, angle + i * 0.03));
           }
           break;
           
@@ -1930,7 +1930,7 @@
       
       if (cooldownWidth >= 250) {
         ctx.fillStyle = "black";
-        ctx.fillText("ESPECIAL PRONTO (E)", 30, 90);
+        ctx.fillText("ESPECIAL PRONTO", 30, 90);
       }
       
       ctx.fillStyle = hellMode ? "#ff5555" : "#00ff88";
@@ -2297,10 +2297,10 @@
         ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
         ctx.fill();
         
-        // Dano ao jogador se estiver na lava
+       
         if (Math.hypot(player.x - p.x, player.y - p.y) < player.radius + p.radius) {
-          player.slowTimer = 18; // 30% de slow por 0.3 segundos
-          if (p.lifetime % 60 === 0) { // Dano a cada segundo
+          player.slowTimer = 18;
+          if (p.lifetime % 60 === 0) { 
             player.takeDamage(10);
           }
         }
