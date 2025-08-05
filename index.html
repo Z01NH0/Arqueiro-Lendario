@@ -319,7 +319,7 @@
       <div class="power-option selected" onclick="selectPower('explosive')">
        <div class="character-icon">💥</div>
         <div>EXPLOSIVO</div>
-        <div class="power-description">Cria uma explosão poderosa que causa dano em área e empurra inimigos!</div>
+        <div class="power-description">Cria uma explosão poderosa em volta de si que causa dano em área!</div>
       </div>
       <div class="power-option" onclick="selectPower('multi')">
         <div class="character-icon">🏹</div>
@@ -344,7 +344,7 @@
       <div class="power-option" onclick="selectPower('meteor')">
         <div class="character-icon">☄️</div>
         <div>ENCOMENDA DOS CÉUS</div>
-        <div class="power-description">Meteoros esmagam seus inimigos e deixam o chão em chamas!</div>
+        <div class="power-description">Meteoros caem dos céus e esmagam seus inimigos, deixando o chão em chamas!</div>
       </div>
     </div>
     <button onclick="startGame()">COMEÇAR JOGO</button>
@@ -352,7 +352,7 @@
     <div id="controls">
       <h3>CONTROLES</h3>
       <p>WASD - Movimento | Mouse - Mirar e Atirar | E - Habilidade Especial | Q - Dash</p>
-      <p>Colete power-ups para ganhar vantagens durante a batalha!</p>
+      <p>Colete power-ups, Mate Inimigos e Derrote os 3 Reis da Morte!</p>
     </div>
   </div>
   
@@ -361,15 +361,15 @@
   <div id="wave-display" style="display: none;">WAVE: 1</div>
   
   <div id="victory-screen">
-    <h1>VITÓRIA LENDÁRIA!</h1>
-    <p>Você provou ser capaz de superar seus limites, agora teste outros poderes!</p>
+    <h1>VITÓRIA!</h1>
+    <p>Você Provou ser Digno da Coroa, Agora Teste Outros Poderes!</p>
     <button onclick="backToMenu()">JOGAR NOVAMENTE</button>
-    <button class="hell-button" onclick="startHellMode()">PROVE SEU VALOR CONTRA O INFERNO</button>
+    <button class="hell-button" onclick="startHellMode()">☠️PROVE SEU VALOR CONTRA O INFERNO☠️</button>
   </div>
   
   <div id="hell-victory-screen">
-    <h1>VITÓRIA SUPREMA!</h1>
-    <p>Você Provou ser sobre Humano e Consquistou as Forças da Escuridão.<br>Você é mais do que o Arqueiro Lendário, Você é o Deus Arqueiro!</p>
+    <h1>VITÓRIA LENDÁRIA!</h1>
+    <p>Você Provou Ser Sobre Humano e Consquistou as Forças da Escuridão.<br>Você é Mais do Que o Arqueiro Lendário, Você é o Deus Arqueiro!</p>
     <button onclick="backToMenu()">JOGAR NOVAMENTE</button>
   </div>
   
@@ -899,10 +899,10 @@
             this.auraActive = false;
             this.scoreValue = 1000;
             break;
-          case 9: // Hell Boss - Devorador de Almas
+          case 9:
             this.radius = 80;
-            this.speed = 0; // Não se move normalmente
-            this.health = (500 + wave * 40) * 2.3; // 30% mais que o boss final
+            this.speed = 0; 
+            this.health = (500 + wave * 40) * 2.3; 
             this.damage = 1;
             this.color = "#330033";
             this.shootCooldown = 0;
@@ -944,17 +944,17 @@
 
         if (this.hitFlash > 0) this.hitFlash--;
 
-        if (this.type === 5) { // Inimigo roxo (atirador)
+        if (this.type === 5) { 
           const distanceToPlayer = Math.hypot(player.x - this.x, player.y - this.y);
           
           if (distanceToPlayer > this.shootingRange) {
-            // Move towards player
+            
             const angle = Math.atan2(player.y - this.y, player.x - this.x);
             this.x += Math.cos(angle) * this.speed;
             this.y += Math.sin(angle) * this.speed;
           }
           
-          // Atira continuamente com cooldown de 1.5 segundos (90 frames)
+         
           if (this.shootCooldown <= 0) {
             const shootAngle = Math.atan2(player.y - this.y, player.x - this.x);
             enemyProjectiles.push(new EnemyProjectile(this.x, this.y, shootAngle, this.type));
@@ -1009,7 +1009,7 @@
             }
             
             this.minionCooldown--;
-            const minionInterval = this.phase === 1 ? 200 : 120; // 3.3s or 2s
+            const minionInterval = this.phase === 1 ? 200 : 120; 
             if (this.minionCooldown <= 0) {
               enemies.push(new Enemy(1, this.wave + 5));
               enemies.push(new Enemy(3, this.wave + 5));
@@ -1027,8 +1027,8 @@
           
           if (this.shootCooldown > 0) this.shootCooldown--;
         } 
-        else if (this.type === 9) { // Devorador de Almas
-          // Teleporta a cada 1.5 segundos (90 frames)
+        else if (this.type === 9) {
+          
           this.teleportCooldown--;
           if (this.teleportCooldown <= 0) {
             this.x = Math.random() * (canvas.width - 200) + 100;
@@ -1036,7 +1036,7 @@
             this.teleportCooldown = 90;
           }
           
-          // Ataque frontal em leque (3 projéteis) a cada 2 segundos (120 frames)
+         
           this.shootCooldown--;
           if (this.shootCooldown <= 0) {
             const angle = Math.atan2(player.y - this.y, player.x - this.x);
@@ -1046,21 +1046,21 @@
             this.shootCooldown = 240;
           }
           
-          // Ataques laterais (2 projéteis que perseguem) a cada 2 segundos (sincronizado com o frontal)
+          
           if (this.shootCooldown === 180) {
             const angle = Math.atan2(player.y - this.y, player.x - this.x);
             enemyProjectiles.push(new EnemyProjectile(this.x, this.y, angle + Math.PI/2, 'homing'));
             enemyProjectiles.push(new EnemyProjectile(this.x, this.y, angle - Math.PI/2, 'homing'));
           }
           
-          // Meteoro negro a cada 4 segundos (240 frames)
+          
           this.meteorCooldown--;
           if (this.meteorCooldown <= 0) {
             darkMeteors.push(new DarkMeteor(player.x, player.y));
             this.meteorCooldown = 240;
           }
           
-          // Ataque radial (30 projéteis) a cada 10 segundos (600 frames)
+         
           this.radialAttackCooldown--;
           if (this.radialAttackCooldown <= 0) {
             for (let i = 0; i < 30; i++) {
@@ -1071,7 +1071,7 @@
           }
         } 
         else {
-          // Move towards player
+         
           const angle = Math.atan2(player.y - this.y, player.x - this.x);
           this.x += Math.cos(angle) * this.speed;
           this.y += Math.sin(angle) * this.speed;
@@ -1089,41 +1089,41 @@
           ctx.fill();
         }
         
-        // Desenha o inimigo congelado azul se estiver sob efeito de congelamento
+        
         ctx.fillStyle = this.isFrozen ? this.frozenColor : this.color;
         ctx.beginPath();
         ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
         ctx.fill();
         
         switch(this.type) {
-          case 2: // armadurado
+          case 2: 
             ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
             ctx.beginPath();
             ctx.arc(0, 0, this.radius - 8, 0, Math.PI * 2);
             ctx.fill();
             break;
-          case 3: // rapido
+          case 3:
             ctx.strokeStyle = "yellow";
             ctx.lineWidth = 3;
             ctx.beginPath();
             ctx.arc(0, 0, this.radius + 5, 0, Math.PI * 2);
             ctx.stroke();
             break;
-          case 4: // tank
+          case 4:
             ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
             ctx.beginPath();
             ctx.arc(0, 0, this.radius - 10, 0, Math.PI * 2);
             ctx.fill();
             break;
-          case 5: // atirador
+          case 5: 
             ctx.fillStyle = "white";
             ctx.beginPath();
             ctx.arc(0, 0, 8, 0, Math.PI * 2);
             ctx.fill();
             break;
-          case 6: // Wave 5 Boss
-          case 7: // Wave 10 Boss
-          case 8: // boss final
+          case 6: 
+          case 7: 
+          case 8: 
             const angle = Math.atan2(player.y - this.y, player.x - this.x);
             ctx.rotate(angle);
             
@@ -1148,21 +1148,21 @@
             ctx.arc(10, 0, 5, 0, Math.PI);
             ctx.fill();
             break;
-          case 9: // Devorador de Almas
-            // Aura
+          case 9: 
+           
             ctx.strokeStyle = this.auraColor;
             ctx.lineWidth = 8;
             ctx.beginPath();
             ctx.arc(0, 0, this.radius + 25, 0, Math.PI * 2);
             ctx.stroke();
             
-            // Corpo
+            
             ctx.fillStyle = this.color;
             ctx.beginPath();
             ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
             ctx.fill();
             
-            // Olhos
+           
             ctx.fillStyle = this.eyesColor;
             ctx.beginPath();
             ctx.arc(-15, -10, 10, 0, Math.PI * 2);
@@ -1171,13 +1171,13 @@
             ctx.arc(15, -10, 10, 0, Math.PI * 2);
             ctx.fill();
             
-            // Boca
+           
             ctx.fillStyle = "black";
             ctx.beginPath();
             ctx.arc(0, 10, 15, 0, Math.PI);
             ctx.fill();
             
-            // Brilho nos olhos
+            
             ctx.fillStyle = "white";
             ctx.beginPath();
             ctx.arc(-12, -15, 3, 0, Math.PI * 2);
@@ -1201,11 +1201,11 @@
           ctx.font = "18px 'Press Start 2P', cursive";
           ctx.textAlign = "center";
           if (this.type === 6) {
-            ctx.fillText("BOSS VIOLETA", this.x, this.y - this.radius - 35);
+            ctx.fillText("REI VIOLETA", this.x, this.y - this.radius - 35);
           } else if (this.type === 7) {
-            ctx.fillText("BOSS DOURADO", this.x, this.y - this.radius - 35);
+            ctx.fillText("REI DOURADO", this.x, this.y - this.radius - 35);
           } else if (this.type === 8) {
-            ctx.fillText("BOSS FINAL", this.x, this.y - this.radius - 35);
+            ctx.fillText("IMPERADOR DO MUNDO", this.x, this.y - this.radius - 35);
           } else if (this.type === 9) {
             ctx.fillText("DEVORADOR DE ALMAS", this.x, this.y - this.radius - 35);
           }
@@ -1391,22 +1391,22 @@
         this.radius = 30;
         this.damage = 50;
         this.impacted = false;
-        this.lavaDuration = 300; // 5 segundos
+        this.lavaDuration = 300; 
         this.lavaRadius = 70;
       }
       
       update() {
         if (!this.impacted) {
-          // Move towards target
+         
           const angle = Math.atan2(this.targetY - this.y, this.targetX - this.x);
           this.x += Math.cos(angle) * this.speed;
           this.y += Math.sin(angle) * this.speed;
           
-          // Check if reached target
+         
           if (Math.hypot(this.targetX - this.x, this.targetY - this.y) < 10) {
             this.impacted = true;
             
-            // Cria mancha de lava
+            
             lavaPatches.push({
               x: this.x,
               y: this.y,
@@ -1414,7 +1414,7 @@
               lifetime: this.lavaDuration
             });
             
-            // Dano ao jogador se estiver perto
+           
             if (Math.hypot(player.x - this.x, player.y - this.y) < player.radius + this.radius) {
               player.takeDamage(this.damage);
             }
@@ -1424,11 +1424,11 @@
       
       draw() {
         if (!this.impacted) {
-          // Draw falling meteor
+         
           ctx.save();
           ctx.translate(this.x, this.y);
           
-          // Meteor core
+         
           const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, this.radius);
           gradient.addColorStop(0, '#660066');
           gradient.addColorStop(0.7, '#330033');
@@ -1439,7 +1439,7 @@
           ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
           ctx.fill();
           
-          // Meteor trail
+         
           ctx.strokeStyle = 'rgba(150, 0, 150, 0.7)';
           ctx.lineWidth = 3;
           ctx.beginPath();
@@ -1588,16 +1588,16 @@
       
       update() {
         if (!this.impacted) {
-          // Move towards target
+         
           const angle = Math.atan2(this.targetY - this.y, this.targetX - this.x);
           this.x += Math.cos(angle) * this.speed;
           this.y += Math.sin(angle) * this.speed;
           
-          // Check if reached target
+         
           if (Math.hypot(this.targetX - this.x, this.targetY - this.y) < 10) {
             this.impacted = true;
             
-            // Damage enemies in radius
+           
             [...enemies, ...bosses].forEach(e => {
               const dist = Math.hypot(this.x - e.x, this.y - e.y);
               if (dist < this.radius + e.radius) {
@@ -1612,11 +1612,11 @@
       
       draw() {
         if (!this.impacted) {
-          // Draw falling meteor
+         
           ctx.save();
           ctx.translate(this.x, this.y);
           
-          // Meteor core
+         
           const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, this.radius);
           gradient.addColorStop(0, 'orange');
           gradient.addColorStop(0.7, 'red');
@@ -1627,7 +1627,7 @@
           ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
           ctx.fill();
           
-          // Meteor trail
+          
           ctx.strokeStyle = 'rgba(255, 165, 0, 0.7)';
           ctx.lineWidth = 3;
           ctx.beginPath();
@@ -1637,7 +1637,7 @@
           
           ctx.restore();
         } else if (this.fireDuration > 0) {
-          // Draw fire effect
+         
           const gradient = ctx.createRadialGradient(
             this.x, this.y, 0,
             this.x, this.y, this.fireRadius
@@ -1651,7 +1651,7 @@
           ctx.arc(this.x, this.y, this.fireRadius * (this.fireDuration / 180), 0, Math.PI * 2);
           ctx.fill();
           
-          // Damage enemies in fire
+         
           if (this.fireDuration % 10 === 0) {
             [...enemies, ...bosses].forEach(e => {
               const dist = Math.hypot(this.x - e.x, this.y - e.y);
@@ -1734,7 +1734,7 @@
           break;
           
         case "meteor":
-          // Spawna meteoros em posições aleatórias
+          
           for (let i = 0; i < 18; i++) {
             setTimeout(() => {
               const x = Math.random() * (canvas.width - 200) + 100;
@@ -1752,7 +1752,7 @@
         this.y = y;
         this.radius = 100;
         this.maxRadius = 100;
-        this.lifetime = 70;
+        this.lifetime = 100;
       }
       
       update() {
@@ -1887,7 +1887,7 @@
       ctx.font = "16px 'Press Start 2P', cursive";
       ctx.fillText(`VIDA: ${Math.floor(player.health)}/${player.maxHealth}`, 30, 45);
       
-      // Draw cooldown for current special
+     
       let cooldownMax = 0;
       let cooldownCurrent = 0;
       let cooldownWidth = 0;
@@ -1993,34 +1993,34 @@
       enemies = [];
       bosses = [];
       
-      // Reset player position to center
+     
       if (player) {
         player.x = canvas.width / 2;
         player.y = canvas.height / 2;
       }
       
       if (hellBossWave) {
-        // wave 20 - boss infernal
+        l
         bosses.push(new Enemy(9, wave));
         waveDisplay.textContent = `WAVE: ${wave} (DEVORADOR DE ALMAS)`;
       }
       else if (finalBossWave) {
-        // wave 15 - boss final
+       
         bosses.push(new Enemy(8, wave));
-        waveDisplay.textContent = `WAVE: ${wave} (BOSS FINAL)`;
+        waveDisplay.textContent = `WAVE: ${wave} (IMPERADOR DO MUNDO)`;
       } else if (bossWave) {
         if (wave === 5) {
-          // Wave 5 - boss roxo
+          
           bosses.push(new Enemy(6, wave));
-          waveDisplay.textContent = `WAVE: ${wave} (BOSS)`;
+          waveDisplay.textContent = `WAVE: ${wave} (REI VIOLETA)`;
         } else if (wave === 10) {
-          // Wave 10 - boss amarelo
+         
           bosses.push(new Enemy(7, wave));
-          waveDisplay.textContent = `WAVE: ${wave} (BOSS DOURADO)`;
+          waveDisplay.textContent = `WAVE: ${wave} (REI DOURADO)`;
         } else {
-          // spawn dos monstrao bolado
+         
           bosses.push(new Enemy(6, wave));
-          waveDisplay.textContent = `WAVE: ${wave} (BOSS)`;
+          waveDisplay.textContent = `WAVE: ${wave} (REI VIOLETA)`;
         }
       } else {
         for (let i = 0; i < count; i++) {
@@ -2049,9 +2049,9 @@
 
     function showWaveStart(wave) {
       const waveText = wave === 20 ? "DEVORADOR DE ALMAS" : 
-                      wave === 15 ? "BOSS FINAL" : 
-                      wave === 10 ? "BOSS DOURADO" : 
-                      wave === 5 ? "BOSS" : 
+                      wave === 15 ? "IMPERADOR DO MUNDO" : 
+                      wave === 10 ? "REI DOURADO" : 
+                      wave === 5 ? "REI VIOLETA" : 
                       `WAVE ${wave}`;
       
       // Dark overlay
@@ -2118,13 +2118,13 @@
     function gameLoop() {
       if (!gameActive) return;
       
-      // Fundo diferente para o modo inferno
+     
       if (hellMode) {
-        // Fundo vulcânico/infernal
+        
         ctx.fillStyle = '#290a0a';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         
-        // Efeitos de lava/fogo
+        
         for (let i = 0; i < 30; i++) {
           const x = Math.random() * canvas.width;
           const y = Math.random() * canvas.height;
@@ -2137,7 +2137,7 @@
           ctx.fill();
         }
       } else {
-        // Fundo normal estrelado
+       
         ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         
@@ -2226,7 +2226,7 @@
           player.takeDamage(p.damage);
           
           if (p.burning) {
-            player.applyBurn(3); // Queimação por 3 segundos
+            player.applyBurn(3); 
           }
           
           p.alive = false;
@@ -2264,26 +2264,26 @@
         }
       });
 
-      // Update and draw meteors
+      
       meteors = meteors.filter(m => m.isActive());
       meteors.forEach(m => {
         m.update();
         m.draw();
       });
 
-      // Update and draw dark meteors
+      
       darkMeteors = darkMeteors.filter(m => m.isActive());
       darkMeteors.forEach(m => {
         m.update();
         m.draw();
       });
 
-      // Update and draw lava patches
+      
       lavaPatches = lavaPatches.filter(p => p.lifetime > 0);
       lavaPatches.forEach(p => {
         p.lifetime--;
         
-        // Desenha a mancha de lava
+       
         const gradient = ctx.createRadialGradient(
           p.x, p.y, 0,
           p.x, p.y, p.radius
