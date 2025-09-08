@@ -521,6 +521,8 @@
           shield: 0,
           meteor: 0
         };
+        this.bowAngle = 0;
+        this.bowAnimation = 0;
       }
 
       update() {
@@ -577,6 +579,7 @@
           const angle = Math.atan2(mouse.y - this.y, mouse.x - this.x);
           arrows.push(new Arrow(this.x, this.y, angle));
           this.shootCooldown = shootSpeed;
+          this.bowAnimation = 10;
           
           this.combo++;
           this.comboTimer = 20; 
@@ -612,13 +615,17 @@
             this.shieldActive = false;
           }
         }
+
+        // Update bow animation
+        if (this.bowAnimation > 0) {
+          this.bowAnimation--;
+        }
       }
 
       draw() {
         ctx.save();
         ctx.translate(this.x, this.y);
-        const angle = Math.atan2(mouse.y - this.y, mouse.x - this.x);
-        ctx.rotate(angle);
+        this.bowAngle = Math.atan2(mouse.y - this.y, mouse.x - this.x);
         
         if (this.dashing) {
           ctx.beginPath();
@@ -647,33 +654,70 @@
           }
         }
         
+        // Draw player body
         ctx.fillStyle = this.invulnerable ? (hellMode ? "#ff5555" : "#00ffff") : (hellMode ? "#ff0000" : "#00ff88");
         ctx.beginPath();
         ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
         ctx.fill();
         
-        ctx.fillStyle = "#8B4513";
-        ctx.fillRect(0, -7, 40, 14);
-        
-        ctx.fillStyle = this.invulnerable ? (hellMode ? "#ff5555" : "#00aaff") : (hellMode ? "#aa0000" : "#00aa77");
-        ctx.beginPath();
-        ctx.arc(0, 0, this.radius - 8, 0, Math.PI * 2);
-        ctx.fill();
-        
+        // Draw player details (face)
         ctx.fillStyle = "white";
         ctx.beginPath();
-        ctx.arc(10, -8, 5, 0, Math.PI * 2);
+        ctx.arc(-8, -8, 5, 0, Math.PI * 2);
         ctx.fill();
         ctx.beginPath();
-        ctx.arc(10, 8, 5, 0, Math.PI * 2);
+        ctx.arc(8, -8, 5, 0, Math.PI * 2);
         ctx.fill();
         
         ctx.fillStyle = "black";
         ctx.beginPath();
-        ctx.arc(12, -8, 2, 0, Math.PI * 2);
+        ctx.arc(-6, -8, 2, 0, Math.PI * 2);
         ctx.fill();
         ctx.beginPath();
-        ctx.arc(12, 8, 2, 0, Math.PI * 2);
+        ctx.arc(10, -8, 2, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Draw bow
+        ctx.save();
+        ctx.rotate(this.bowAngle);
+        
+        // Bow body
+        ctx.strokeStyle = "#8B4513";
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        
+        const pull = this.bowAnimation > 0 ? 10 - this.bowAnimation : 0;
+        
+        // Bow curve with animation
+        ctx.moveTo(-5, -12);
+        ctx.quadraticCurveTo(pull, 0, -5, 12);
+        ctx.stroke();
+        
+        // Bow string
+        if (this.bowAnimation > 0) {
+          ctx.strokeStyle = "#DDD";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(-5, -12);
+          ctx.lineTo(-5 + pull/2, 0);
+          ctx.lineTo(-5, 12);
+          ctx.stroke();
+        } else {
+          ctx.strokeStyle = "#DDD";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(-5, -12);
+          ctx.lineTo(-5, 12);
+          ctx.stroke();
+        }
+        
+        ctx.restore();
+        
+        // Draw cape/cloak
+        ctx.fillStyle = hellMode ? "#8B0000" : "#0044aa";
+        ctx.beginPath();
+        ctx.moveTo(-this.radius, 0);
+        ctx.bezierCurveTo(-this.radius-5, this.radius+5, this.radius+5, this.radius+5, this.radius, 0);
         ctx.fill();
         
         ctx.restore();
@@ -709,6 +753,7 @@
         this.lifetime = 120;
         this.damage = 25;
         this.pierce = 0;
+        this.trail = [];
         
         if (specialEffect === 'lightning') {
           this.damage = 40;
@@ -719,6 +764,10 @@
       }
 
       update() {
+        // Store trail positions
+        if (this.trail.length > 5) this.trail.shift();
+        this.trail.push({x: this.x, y: this.y});
+        
         this.x += this.dx;
         this.y += this.dy;
         this.lifetime--;
@@ -733,6 +782,18 @@
       }
 
       draw() {
+        // Draw trail
+        if (this.trail.length > 1) {
+          ctx.strokeStyle = hellMode ? 'rgba(255, 100, 100, 0.3)' : 'rgba(0, 255, 255, 0.3)';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(this.trail[0].x, this.trail[0].y);
+          for (let i = 1; i < this.trail.length; i++) {
+            ctx.lineTo(this.trail[i].x, this.trail[i].y);
+          }
+          ctx.stroke();
+        }
+        
         ctx.save();
         ctx.translate(this.x, this.y);
         ctx.rotate(this.angle);
@@ -757,9 +818,18 @@
           }
           
           ctx.beginPath();
-          ctx.arc(0, 0, 10, 0, Math.PI * 2);
-          ctx.fillStyle = 'rgba(255, 255, 150, 0.3)';
-          ctx.fill();
+            ctx.arc(0, 0, 10, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(255, 255, 150, 0.3)';
+            ctx.fill();
+            
+            // Lightning aura
+            ctx.beginPath();
+            ctx.arc(0, 0, 15, 0, Math.PI * 2);
+            const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, 15);
+            gradient.addColorStop(0, 'rgba(0, 255, 255, 0.5)');
+            gradient.addColorStop(1, 'rgba(0, 255, 255, 0)');
+            ctx.fillStyle = gradient;
+            ctx.fill();
         } else if (this.specialEffect === 'explosive') {
           const gradient = ctx.createLinearGradient(0, -5, 25, 0);
           gradient.addColorStop(0, 'red');
@@ -772,6 +842,15 @@
           ctx.beginPath();
           ctx.arc(25, 0, 5, 0, Math.PI * 2);
           ctx.fillStyle = 'rgba(255, 100, 0, 0.7)';
+          ctx.fill();
+          
+          // Explosive aura
+          ctx.beginPath();
+          ctx.arc(0, 0, 12, 0, Math.PI * 2);
+          const auraGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, 12);
+          auraGradient.addColorStop(0, 'rgba(255, 100, 0, 0.5)');
+          auraGradient.addColorStop(1, 'rgba(255, 100, 0, 0)');
+          ctx.fillStyle = auraGradient;
           ctx.fill();
         } else {
           const gradient = ctx.createLinearGradient(0, -3, 25, 0);
@@ -824,39 +903,43 @@
         }
         
         switch(type) {
-          case 1:
+          case 1: // Basic enemy
             this.radius = 18;
             this.speed = 2.5 + wave * 0.07;
             this.health = 40 + wave * 3;
             this.color = hellMode ? "#ff8888" : "#ff5555";
             this.damage = 0.5;
             this.scoreValue = 10;
+            this.burnTimer = 0;
             break;
-          case 2: 
+          case 2: // Tank enemy
             this.radius = 22;
             this.speed = 2 + wave * 0.05;
             this.health = 100 + wave * 6;
             this.color = hellMode ? "#ff3333" : "#aa0000";
             this.damage = 0.8;
             this.scoreValue = 25;
+            this.burnTimer = 0;
             break;
-          case 3: 
+          case 3: // Fast enemy
             this.radius = 15;
             this.speed = 3.6 + wave * 0.09;
             this.health = 30 + wave * 2;
             this.color = hellMode ? "#ffcc00" : "#ffaa00";
             this.damage = 0.3;
             this.scoreValue = 15;
+            this.burnTimer = 0;
             break;
-          case 4: 
+          case 4: // Big enemy
             this.radius = 30;
             this.speed = 1.2 + wave * 0.03;
             this.health = 200 + wave * 10;
             this.color = hellMode ? "#8888ff" : "#5555ff";
             this.damage = 1.2;
             this.scoreValue = 40;
+            this.burnTimer = 0;
             break;
-          case 5:
+          case 5: // Ranged enemy
             this.radius = 20;
             this.speed = 2 + wave * 0.06;
             this.health = 70 + wave * 4;
@@ -865,41 +948,48 @@
             this.shootCooldown = 0;
             this.shootingRange = 300;
             this.scoreValue = 30;
+            this.burnTimer = 0;
             break;
-          case 6: // Wave 5 Boss
+          case 6: // Wave 5 Boss - Rei Violeta
             this.radius = 55;
-            this.speed = player.speed * 0.85;
+            this.speed = 3.5;
             this.health = 500 + wave * 40;
-            this.color = hellMode ? "#ff00ff" : "#ff00ff";
+            this.color = hellMode ? "#ff00ff" : "#aa00aa";
             this.damage = 2;
             this.shootCooldown = 0;
             this.fireTrailCooldown = 0;
             this.fireTrails = [];
             this.scoreValue = 200;
+            this.burnTimer = 0;
+            this.animationTimer = 0;
             break;
-          case 7: // Wave 10 Boss
+          case 7: // Wave 10 Boss - Rei Dourado
             this.radius = 55;
-            this.speed = player.speed * 0.75;
+            this.speed = 3;
             this.health = (500 + wave * 40) * 1.4;
-            this.color = hellMode ? "#ffff00" : "#ffff00";
+            this.color = hellMode ? "#ffff00" : "#ffcc00";
             this.damage = 2;
             this.shootCooldown = 0;
             this.specialCooldown = 0;
             this.scoreValue = 400;
+            this.burnTimer = 0;
+            this.animationTimer = 0;
             break;
-          case 8: // Final Boss
+          case 8: // Final Boss - Imperador do Mundo
             this.radius = 70;
-            this.speed = player.speed * 0.8;
+            this.speed = 2.8;
             this.health = (500 + wave * 40) * 2;
-            this.color = hellMode ? "#ff4500" : "#ff4500";
+            this.color = hellMode ? "#ff4500" : "#ff3300";
             this.damage = 3;
             this.shootCooldown = 0;
             this.minionCooldown = 0;
             this.phase = 1;
             this.auraActive = false;
             this.scoreValue = 1000;
+            this.burnTimer = 0;
+            this.animationTimer = 0;
             break;
-          case 9:
+          case 9: // Hell Boss - Devorador de Almas
             this.radius = 80;
             this.speed = 0; 
             this.health = (500 + wave * 40) * 2.3; 
@@ -912,6 +1002,8 @@
             this.eyesColor = "#9900ff";
             this.auraColor = "#ff0000";
             this.scoreValue = 2000;
+            this.burnTimer = 0;
+            this.animationTimer = 0;
             break;
         }
         
@@ -922,10 +1014,22 @@
         this.stunnedTimer = 0;
         this.frozenColor = "#00aaff";
         this.isFrozen = false;
-        
+        this.burnDamageTimer = 0;
       }
 
       update() {
+        this.animationTimer++;
+        
+        if (this.burnTimer > 0) {
+          this.burnTimer--;
+          this.burnDamageTimer--;
+          
+          if (this.burnDamageTimer <= 0) {
+            this.takeDamage(10);
+            this.burnDamageTimer = 60; // Damage every second
+          }
+        }
+        
         if (this.stunnedTimer > 0) {
           this.stunnedTimer--;
           return;
@@ -935,8 +1039,6 @@
           this.slowTimer--;
           this.speed = this.originalSpeed * 0.3;
           this.isFrozen = true;
-          
-         
         } else {
           this.speed = this.originalSpeed;
           this.isFrozen = false;
@@ -948,13 +1050,11 @@
           const distanceToPlayer = Math.hypot(player.x - this.x, player.y - this.y);
           
           if (distanceToPlayer > this.shootingRange) {
-            
             const angle = Math.atan2(player.y - this.y, player.x - this.x);
             this.x += Math.cos(angle) * this.speed;
             this.y += Math.sin(angle) * this.speed;
           }
           
-         
           if (this.shootCooldown <= 0) {
             const shootAngle = Math.atan2(player.y - this.y, player.x - this.x);
             enemyProjectiles.push(new EnemyProjectile(this.x, this.y, shootAngle, this.type));
@@ -963,7 +1063,7 @@
           
           if (this.shootCooldown > 0) this.shootCooldown--;
         }
-        else if (this.type === 6 || this.type === 7 || this.type === 8) {
+        else if (this.type === 6 || this.type === 7 || this.type === 8 || this.type === 9) {
           const angle = Math.atan2(player.y - this.y, player.x - this.x);
           this.x += Math.cos(angle) * this.speed;
           this.y += Math.sin(angle) * this.speed;
@@ -1024,54 +1124,48 @@
               this.shootCooldown = 40;
             }
           }
+          else if (this.type === 9) {
+            this.teleportCooldown--;
+            if (this.teleportCooldown <= 0) {
+              this.x = Math.random() * (canvas.width - 200) + 100;
+              this.y = Math.random() * (canvas.height - 200) + 100;
+              this.teleportCooldown = 90;
+            }
+            
+            this.shootCooldown--;
+            if (this.shootCooldown <= 0) {
+              const angle = Math.atan2(player.y - this.y, player.x - this.x);
+              for (let i = -1; i <= 1; i++) {
+                enemyProjectiles.push(new EnemyProjectile(this.x, this.y, angle + (i * 0.3), this.type));
+              }
+              this.shootCooldown = 240;
+            }
+            
+            if (this.shootCooldown === 180) {
+              const angle = Math.atan2(player.y - this.y, player.x - this.x);
+              enemyProjectiles.push(new EnemyProjectile(this.x, this.y, angle + Math.PI/2, 'homing'));
+              enemyProjectiles.push(new EnemyProjectile(this.x, this.y, angle - Math.PI/2, 'homing'));
+            }
+            
+            this.meteorCooldown--;
+            if (this.meteorCooldown <= 0) {
+              darkMeteors.push(new DarkMeteor(player.x, player.y));
+              this.meteorCooldown = 240;
+            }
+            
+            this.radialAttackCooldown--;
+            if (this.radialAttackCooldown <= 0) {
+              for (let i = 0; i < 30; i++) {
+                const angle = (i / 30) * Math.PI * 2;
+                enemyProjectiles.push(new EnemyProjectile(this.x, this.y, angle, 'burning'));
+              }
+              this.radialAttackCooldown = 600;
+            }
+          }
           
           if (this.shootCooldown > 0) this.shootCooldown--;
         } 
-        else if (this.type === 9) {
-          
-          this.teleportCooldown--;
-          if (this.teleportCooldown <= 0) {
-            this.x = Math.random() * (canvas.width - 200) + 100;
-            this.y = Math.random() * (canvas.height - 200) + 100;
-            this.teleportCooldown = 90;
-          }
-          
-         
-          this.shootCooldown--;
-          if (this.shootCooldown <= 0) {
-            const angle = Math.atan2(player.y - this.y, player.x - this.x);
-            for (let i = -1; i <= 1; i++) {
-              enemyProjectiles.push(new EnemyProjectile(this.x, this.y, angle + (i * 0.3), this.type));
-            }
-            this.shootCooldown = 240;
-          }
-          
-          
-          if (this.shootCooldown === 180) {
-            const angle = Math.atan2(player.y - this.y, player.x - this.x);
-            enemyProjectiles.push(new EnemyProjectile(this.x, this.y, angle + Math.PI/2, 'homing'));
-            enemyProjectiles.push(new EnemyProjectile(this.x, this.y, angle - Math.PI/2, 'homing'));
-          }
-          
-          
-          this.meteorCooldown--;
-          if (this.meteorCooldown <= 0) {
-            darkMeteors.push(new DarkMeteor(player.x, player.y));
-            this.meteorCooldown = 240;
-          }
-          
-         
-          this.radialAttackCooldown--;
-          if (this.radialAttackCooldown <= 0) {
-            for (let i = 0; i < 30; i++) {
-              const angle = (i / 30) * Math.PI * 2;
-              enemyProjectiles.push(new EnemyProjectile(this.x, this.y, angle, 'burning'));
-            }
-            this.radialAttackCooldown = 600;
-          }
-        } 
         else {
-         
           const angle = Math.atan2(player.y - this.y, player.x - this.x);
           this.x += Math.cos(angle) * this.speed;
           this.y += Math.sin(angle) * this.speed;
@@ -1089,45 +1183,304 @@
           ctx.fill();
         }
         
+        // Draw burning effect if active
+        if (this.burnTimer > 0) {
+          for (let i = 0; i < 3; i++) {
+            const flameX = Math.random() * this.radius * 2 - this.radius;
+            const flameY = Math.random() * this.radius * 2 - this.radius;
+            const flameSize = Math.random() * 5 + 3;
+            
+            ctx.fillStyle = `rgba(255, ${100 + Math.floor(Math.random() * 100)}, 0, 0.8)`;
+            ctx.beginPath();
+            ctx.arc(flameX, flameY - 10, flameSize, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+        
+        // Draw stunned/lightning effect if active
+        if (this.stunnedTimer > 0) {
+          ctx.strokeStyle = "cyan";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          
+          for (let i = 0; i < 5; i++) {
+            const startAngle = Math.random() * Math.PI * 2;
+            const endAngle = startAngle + Math.PI / 4;
+            ctx.arc(0, 0, this.radius + 10, startAngle, endAngle);
+          }
+          
+          ctx.stroke();
+        }
         
         ctx.fillStyle = this.isFrozen ? this.frozenColor : this.color;
-        ctx.beginPath();
-        ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
-        ctx.fill();
         
         switch(this.type) {
-          case 2: 
-            ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
+          case 1: // Basic enemy - Goblin
             ctx.beginPath();
-            ctx.arc(0, 0, this.radius - 8, 0, Math.PI * 2);
+            ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
             ctx.fill();
-            break;
-          case 3:
-            ctx.strokeStyle = "yellow";
-            ctx.lineWidth = 3;
-            ctx.beginPath();
-            ctx.arc(0, 0, this.radius + 5, 0, Math.PI * 2);
-            ctx.stroke();
-            break;
-          case 4:
-            ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
-            ctx.beginPath();
-            ctx.arc(0, 0, this.radius - 10, 0, Math.PI * 2);
-            ctx.fill();
-            break;
-          case 5: 
+            
+            // Eyes
             ctx.fillStyle = "white";
             ctx.beginPath();
-            ctx.arc(0, 0, 8, 0, Math.PI * 2);
+            ctx.arc(-5, -5, 3, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(5, -5, 3, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.fillStyle = "black";
+            ctx.beginPath();
+            ctx.arc(-5, -5, 1, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(5, -5, 1, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Mouth
+            ctx.strokeStyle = "black";
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.arc(0, 3, 5, 0.1, Math.PI - 0.1);
+            ctx.stroke();
+            
+            // Spikes
+            ctx.strokeStyle = hellMode ? "#ff5555" : "#555555";
+            ctx.lineWidth = 2;
+            for (let i = 0; i < 8; i++) {
+              const angle = (i / 8) * Math.PI * 2;
+              ctx.beginPath();
+              ctx.moveTo(
+                Math.cos(angle) * this.radius,
+                Math.sin(angle) * this.radius
+              );
+              ctx.lineTo(
+                Math.cos(angle) * (this.radius + 5),
+                Math.sin(angle) * (this.radius + 5)
+              );
+              ctx.stroke();
+            }
+            break;
+            
+          case 2: // Tank enemy - Orc
+            ctx.beginPath();
+            ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Armor details
+            ctx.fillStyle = hellMode ? "#aa0000" : "#333333";
+            ctx.fillRect(-this.radius + 2, -this.radius + 5, this.radius * 2 - 4, 10);
+            ctx.fillRect(-this.radius + 2, this.radius - 15, this.radius * 2 - 4, 10);
+            
+            // Eyes
+            ctx.fillStyle = "yellow";
+            ctx.beginPath();
+            ctx.arc(-7, -5, 4, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(7, -5, 4, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.fillStyle = "black";
+            ctx.beginPath();
+            ctx.arc(-7, -5, 2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(7, -5, 2, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Tusks
+            ctx.strokeStyle = "white";
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(-5, 5);
+            ctx.lineTo(-10, 10);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(5, 5);
+            ctx.lineTo(10, 10);
+            ctx.stroke();
+            break;
+            
+          case 3: // Fast enemy - Imp
+            ctx.beginPath();
+            ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Wings
+            ctx.fillStyle = hellMode ? "rgba(255, 200, 0, 0.6)" : "rgba(255, 255, 255, 0.6)";
+            ctx.beginPath();
+            ctx.ellipse(-15, -10, 10, 15, -Math.PI/4, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.ellipse(15, -10, 10, 15, Math.PI/4, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Horns
+            ctx.fillStyle = hellMode ? "#ff5555" : "#555555";
+            ctx.beginPath();
+            ctx.moveTo(-5, -this.radius);
+            ctx.lineTo(-10, -this.radius - 8);
+            ctx.lineTo(-3, -this.radius - 5);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.moveTo(5, -this.radius);
+            ctx.lineTo(10, -this.radius - 8);
+            ctx.lineTo(3, -this.radius - 5);
+            ctx.fill();
+            
+            // Eyes
+            ctx.fillStyle = "white";
+            ctx.beginPath();
+            ctx.arc(-4, -2, 2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(4, -2, 2, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.fillStyle = "red";
+            ctx.beginPath();
+            ctx.arc(-4, -2, 1, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(4, -2, 1, 0, Math.PI * 2);
             ctx.fill();
             break;
-          case 6: 
-          case 7: 
-          case 8: 
+            
+          case 4: // Big enemy - Ogre
+            ctx.beginPath();
+            ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Club
+            ctx.fillStyle = "#8B4513";
+            ctx.fillRect(this.radius - 5, -20, 15, 40);
+            
+            // Spikes on club
+            ctx.fillStyle = "#555555";
+            for (let i = -15; i < 15; i += 10) {
+              ctx.beginPath();
+              ctx.moveTo(this.radius + 10, i);
+              ctx.lineTo(this.radius + 20, i + 5);
+              ctx.lineTo(this.radius + 10, i + 10);
+              ctx.fill();
+            }
+            
+            // Belly
+            ctx.fillStyle = hellMode ? "#ff8888" : "#ffaaaa";
+            ctx.beginPath();
+            ctx.arc(0, 5, this.radius - 8, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Eyes
+            ctx.fillStyle = "white";
+            ctx.beginPath();
+            ctx.arc(-10, -8, 5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(10, -8, 5, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.fillStyle = "black";
+            ctx.beginPath();
+            ctx.arc(-10, -8, 2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(10, -8, 2, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Mouth
+            ctx.strokeStyle = "black";
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(0, 5, 10, 0, Math.PI);
+            ctx.stroke();
+            break;
+            
+          case 5: // Ranged enemy - Mage
+            ctx.beginPath();
+            ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Robe details
+            ctx.fillStyle = hellMode ? "#550055" : "#330033";
+            ctx.beginPath();
+            ctx.arc(0, 0, this.radius - 5, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Staff
+            ctx.strokeStyle = "#8B4513";
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(0, -this.radius);
+            ctx.lineTo(0, this.radius);
+            ctx.stroke();
+            
+            // Gem on staff
+            ctx.fillStyle = hellMode ? "#ff00ff" : "#aa00aa";
+            ctx.beginPath();
+            ctx.arc(0, -this.radius + 5, 4, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Eyes
+            ctx.fillStyle = "white";
+            ctx.beginPath();
+            ctx.arc(-5, -5, 3, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(5, -5, 3, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.fillStyle = "cyan";
+            ctx.beginPath();
+            ctx.arc(-5, -5, 1, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(5, -5, 1, 0, Math.PI * 2);
+            ctx.fill();
+            break;
+            
+          case 6: // Rei Violeta
             const angle = Math.atan2(player.y - this.y, player.x - this.x);
             ctx.rotate(angle);
             
-            ctx.fillStyle = "yellow";
+            // Crown
+            ctx.fillStyle = hellMode ? "#ff00ff" : "#aa00aa";
+            for (let i = -1; i <= 1; i++) {
+              ctx.beginPath();
+              ctx.moveTo(i * 15, -this.radius - 10);
+              ctx.lineTo(i * 15 + 7, -this.radius - 20);
+              ctx.lineTo(i * 15 - 7, -this.radius - 20);
+              ctx.fill();
+            }
+            
+            // Jewel in crown
+            ctx.fillStyle = "#00ffff";
+            ctx.beginPath();
+              ctx.arc(0, -this.radius - 15, 5, 0, Math.PI * 2);
+              ctx.fill();
+            
+            // Body
+            ctx.fillStyle = this.isFrozen ? this.frozenColor : this.color;
+            ctx.beginPath();
+            ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Royal robe pattern
+            ctx.fillStyle = hellMode ? "#ff88ff" : "#ff00ff";
+            for (let i = 0; i < 8; i++) {
+              const patternAngle = (i / 8) * Math.PI * 2 + this.animationTimer / 20;
+              ctx.beginPath();
+              ctx.arc(
+                Math.cos(patternAngle) * (this.radius - 5),
+                Math.sin(patternAngle) * (this.radius - 5),
+                3, 0, Math.PI * 2
+              );
+              ctx.fill();
+            }
+            
+            // Eyes
+            ctx.fillStyle = "white";
             ctx.beginPath();
             ctx.arc(15, -10, 8, 0, Math.PI * 2);
             ctx.fill();
@@ -1135,7 +1488,7 @@
             ctx.arc(15, 10, 8, 0, Math.PI * 2);
             ctx.fill();
             
-            ctx.fillStyle = "red";
+            ctx.fillStyle = "black";
             ctx.beginPath();
             ctx.arc(18, -10, 4, 0, Math.PI * 2);
             ctx.fill();
@@ -1143,26 +1496,200 @@
             ctx.arc(18, 10, 4, 0, Math.PI * 2);
             ctx.fill();
             
-            ctx.fillStyle = "black";
+            // Mouth
+            ctx.strokeStyle = "black";
+            ctx.lineWidth = 2;
             ctx.beginPath();
             ctx.arc(10, 0, 5, 0, Math.PI);
-            ctx.fill();
-            break;
-          case 9: 
-           
-            ctx.strokeStyle = this.auraColor;
-            ctx.lineWidth = 8;
-            ctx.beginPath();
-            ctx.arc(0, 0, this.radius + 25, 0, Math.PI * 2);
             ctx.stroke();
             
+            // Aura
+            ctx.beginPath();
+            ctx.arc(0, 0, this.radius + 15, 0, Math.PI * 2);
+            const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, this.radius + 15);
+            gradient.addColorStop(0, 'rgba(170, 0, 170, 0.3)');
+            gradient.addColorStop(1, 'rgba(170, 0, 170, 0)');
+            ctx.fillStyle = gradient;
+            ctx.fill();
+            break;
             
+          case 7: // Rei Dourado
+            ctx.rotate(Math.atan2(player.y - this.y, player.x - this.x));
+            
+            // Crown with jewels
+            ctx.fillStyle = hellMode ? "#ffff00" : "#ffcc00";
+            for (let i = -1; i <= 1; i++) {
+              ctx.beginPath();
+              ctx.moveTo(i * 15, -this.radius - 10);
+              ctx.lineTo(i * 15 + 7, -this.radius - 20);
+              ctx.lineTo(i * 15 - 7, -this.radius - 20);
+              ctx.fill();
+              
+              // Jewels in crown
+              ctx.fillStyle = i === 0 ? "#ff0000" : "#00ff00";
+              ctx.beginPath();
+              ctx.arc(i * 15, -this.radius - 15, 3, 0, Math.PI * 2);
+              ctx.fill();
+              ctx.fillStyle = hellMode ? "#ffff00" : "#ffcc00";
+            }
+            
+            // Body
+            ctx.fillStyle = this.isFrozen ? this.frozenColor : this.color;
+            ctx.beginPath();
+            ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Sun pattern
+            ctx.fillStyle = hellMode ? "#ffaa00" : "#ff9900";
+            for (let i = 0; i < 12; i++) {
+              const rayAngle = (i / 12) * Math.PI * 2 + this.animationTimer / 30;
+              ctx.beginPath();
+              ctx.moveTo(0, 0);
+              ctx.lineTo(
+                Math.cos(rayAngle) * (this.radius + 10),
+                Math.sin(rayAngle) * (this.radius + 10)
+              );
+              ctx.lineWidth = 3;
+              ctx.stroke();
+            }
+            
+            // Eyes
+            ctx.fillStyle = "white";
+            ctx.beginPath();
+            ctx.arc(15, -10, 8, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(15, 10, 8, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.fillStyle = "black";
+            ctx.beginPath();
+            ctx.arc(18, -10, 4, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(18, 10, 4, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Mouth
+            ctx.strokeStyle = "black";
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(10, 0, 5, 0, Math.PI);
+            ctx.stroke();
+            
+            // Golden aura
+            ctx.beginPath();
+            ctx.arc(0, 0, this.radius + 15, 0, Math.PI * 2);
+            const goldGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, this.radius + 15);
+            goldGradient.addColorStop(0, 'rgba(255, 204, 0, 0.4)');
+            goldGradient.addColorStop(1, 'rgba(255, 204, 0, 0)');
+            ctx.fillStyle = goldGradient;
+            ctx.fill();
+            break;
+            
+          case 8: // Imperador do Mundo
+            ctx.rotate(Math.atan2(player.y - this.y, player.x - this.x));
+            
+            // Imperial crown
+            ctx.fillStyle = hellMode ? "#ff3300" : "#cc2200";
+            ctx.beginPath();
+            ctx.moveTo(-20, -this.radius - 5);
+            ctx.lineTo(20, -this.radius - 5);
+            ctx.lineTo(20, -this.radius - 15);
+            ctx.lineTo(0, -this.radius - 25);
+            ctx.lineTo(-20, -this.radius - 15);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Jewels in crown
+            ctx.fillStyle = "#00ccff";
+            ctx.beginPath();
+            ctx.arc(0, -this.radius - 20, 4, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Body
+            ctx.fillStyle = this.isFrozen ? this.frozenColor : this.color;
+            ctx.beginPath();
+            ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Imperial insignia
+            ctx.fillStyle = hellMode ? "#ff5500" : "#ff0000";
+            ctx.beginPath();
+            ctx.moveTo(0, -this.radius + 10);
+            ctx.lineTo(-10, 0);
+            ctx.lineTo(0, this.radius - 10);
+            ctx.lineTo(10, 0);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Eyes
+            ctx.fillStyle = "white";
+            ctx.beginPath();
+            ctx.arc(15, -10, 8, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(15, 10, 8, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.fillStyle = "black";
+            ctx.beginPath();
+            ctx.arc(18, -10, 4, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(18, 10, 4, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Mouth
+            ctx.strokeStyle = "black";
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(10, 0, 5, 0, Math.PI);
+            ctx.stroke();
+            
+            // Phase 2 aura
+            if (this.phase === 2) {
+              ctx.beginPath();
+              ctx.arc(0, 0, this.radius + 20, 0, Math.PI * 2);
+              const phaseGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, this.radius + 20);
+              phaseGradient.addColorStop(0, 'rgba(255, 0, 0, 0.5)');
+              phaseGradient.addColorStop(1, 'rgba(255, 0, 0, 0)');
+              ctx.fillStyle = phaseGradient;
+              ctx.fill();
+            }
+            break;
+            
+          case 9: // Devorador de Almas
+            // Dark aura
+            ctx.beginPath();
+            ctx.arc(0, 0, this.radius + 25, 0, Math.PI * 2);
+            const auraGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, this.radius + 25);
+            auraGradient.addColorStop(0, 'rgba(255, 0, 0, 0.5)');
+            auraGradient.addColorStop(0.7, 'rgba(150, 0, 0, 0.3)');
+            auraGradient.addColorStop(1, 'rgba(50, 0, 0, 0)');
+            ctx.fillStyle = auraGradient;
+            ctx.fill();
+            
+            // Body
             ctx.fillStyle = this.color;
             ctx.beginPath();
             ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
             ctx.fill();
             
-           
+            // Soul patterns
+            ctx.fillStyle = "#9900ff";
+            for (let i = 0; i < 6; i++) {
+              const soulAngle = (i / 6) * Math.PI * 2 + this.animationTimer / 20;
+              ctx.beginPath();
+              ctx.arc(
+                Math.cos(soulAngle) * (this.radius - 10),
+                Math.sin(soulAngle) * (this.radius - 10),
+                5, 0, Math.PI * 2
+              );
+              ctx.fill();
+            }
+            
+            // Eyes
             ctx.fillStyle = this.eyesColor;
             ctx.beginPath();
             ctx.arc(-15, -10, 10, 0, Math.PI * 2);
@@ -1171,19 +1698,35 @@
             ctx.arc(15, -10, 10, 0, Math.PI * 2);
             ctx.fill();
             
-           
-            ctx.fillStyle = "black";
-            ctx.beginPath();
-            ctx.arc(0, 10, 15, 0, Math.PI);
-            ctx.fill();
-            
-            
+            // Pupils
             ctx.fillStyle = "white";
             ctx.beginPath();
             ctx.arc(-12, -15, 3, 0, Math.PI * 2);
             ctx.fill();
             ctx.beginPath();
             ctx.arc(18, -15, 3, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Mouth
+            ctx.fillStyle = "black";
+            ctx.beginPath();
+            ctx.arc(0, 10, 15, 0, Math.PI);
+            ctx.fill();
+            
+            // Teeth
+            ctx.fillStyle = "white";
+            for (let i = -2; i <= 2; i++) {
+              ctx.beginPath();
+              ctx.moveTo(i * 5, 10);
+              ctx.lineTo(i * 5 + 2, 20);
+              ctx.lineTo(i * 5 - 2, 20);
+              ctx.fill();
+            }
+            break;
+            
+          default:
+            ctx.beginPath();
+            ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
             ctx.fill();
         }
         
@@ -1228,6 +1771,11 @@
       
       stun(duration) {
         this.stunnedTimer = duration;
+      }
+      
+      applyBurn(duration) {
+        this.burnTimer = duration * 60;
+        this.burnDamageTimer = 60;
       }
     }
 
@@ -1309,9 +1857,14 @@
         }
         
         this.alive = true;
+        this.trail = [];
       }
 
       update() {
+        // Store trail positions
+        if (this.trail.length > 5) this.trail.shift();
+        this.trail.push({x: this.x, y: this.y});
+        
         if (this.homing) {
           const targetAngle = Math.atan2(player.y - this.y, player.x - this.x);
           const angleDiff = ((targetAngle - this.angle + 3 * Math.PI) % (2 * Math.PI)) - Math.PI;
@@ -1327,6 +1880,18 @@
       }
 
       draw() {
+        // Draw trail
+        if (this.trail.length > 1) {
+          ctx.strokeStyle = this.burning ? 'rgba(255, 100, 0, 0.3)' : 'rgba(200, 200, 255, 0.3)';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(this.trail[0].x, this.trail[0].y);
+          for (let i = 1; i < this.trail.length; i++) {
+            ctx.lineTo(this.trail[i].x, this.trail[i].y);
+          }
+          ctx.stroke();
+        }
+        
         if (this.isEnergyBall) {
           ctx.fillStyle = this.color;
           ctx.beginPath();
@@ -1393,19 +1958,21 @@
         this.impacted = false;
         this.lavaDuration = 300; 
         this.lavaRadius = 70;
+        this.trail = [];
       }
       
       update() {
+        // Store trail positions
+        if (this.trail.length > 10) this.trail.shift();
+        this.trail.push({x: this.x, y: this.y});
+        
         if (!this.impacted) {
-         
           const angle = Math.atan2(this.targetY - this.y, this.targetX - this.x);
           this.x += Math.cos(angle) * this.speed;
           this.y += Math.sin(angle) * this.speed;
           
-         
           if (Math.hypot(this.targetX - this.x, this.targetY - this.y) < 10) {
             this.impacted = true;
-            
             
             lavaPatches.push({
               x: this.x,
@@ -1414,7 +1981,6 @@
               lifetime: this.lavaDuration
             });
             
-           
             if (Math.hypot(player.x - this.x, player.y - this.y) < player.radius + this.radius) {
               player.takeDamage(this.damage);
             }
@@ -1423,12 +1989,22 @@
       }
       
       draw() {
+        // Draw trail
+        if (this.trail.length > 1 && !this.impacted) {
+          ctx.strokeStyle = 'rgba(150, 0, 150, 0.3)';
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.moveTo(this.trail[0].x, this.trail[0].y);
+          for (let i = 1; i < this.trail.length; i++) {
+            ctx.lineTo(this.trail[i].x, this.trail[i].y);
+          }
+          ctx.stroke();
+        }
+        
         if (!this.impacted) {
-         
           ctx.save();
           ctx.translate(this.x, this.y);
           
-         
           const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, this.radius);
           gradient.addColorStop(0, '#660066');
           gradient.addColorStop(0.7, '#330033');
@@ -1439,7 +2015,6 @@
           ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
           ctx.fill();
           
-         
           ctx.strokeStyle = 'rgba(150, 0, 150, 0.7)';
           ctx.lineWidth = 3;
           ctx.beginPath();
@@ -1584,25 +2159,35 @@
         this.impacted = false;
         this.fireDuration = 180;
         this.fireRadius = 80;
+        this.trail = [];
       }
       
       update() {
+        // Store trail positions
+        if (this.trail.length > 10) this.trail.shift();
+        this.trail.push({x: this.x, y: this.y});
+        
         if (!this.impacted) {
-         
           const angle = Math.atan2(this.targetY - this.y, this.targetX - this.x);
           this.x += Math.cos(angle) * this.speed;
           this.y += Math.sin(angle) * this.speed;
           
-         
           if (Math.hypot(this.targetX - this.x, this.targetY - this.y) < 10) {
             this.impacted = true;
             
-           
             [...enemies, ...bosses].forEach(e => {
               const dist = Math.hypot(this.x - e.x, this.y - e.y);
               if (dist < this.radius + e.radius) {
                 e.takeDamage(this.damage);
               }
+            });
+            
+            // Create lava patch
+            lavaPatches.push({
+              x: this.x,
+              y: this.y,
+              radius: this.fireRadius,
+              lifetime: this.fireDuration
             });
           }
         } else {
@@ -1611,12 +2196,22 @@
       }
       
       draw() {
+        // Draw trail
+        if (this.trail.length > 1 && !this.impacted) {
+          ctx.strokeStyle = 'rgba(255, 100, 0, 0.3)';
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.moveTo(this.trail[0].x, this.trail[0].y);
+          for (let i = 1; i < this.trail.length; i++) {
+            ctx.lineTo(this.trail[i].x, this.trail[i].y);
+          }
+          ctx.stroke();
+        }
+        
         if (!this.impacted) {
-         
           ctx.save();
           ctx.translate(this.x, this.y);
           
-         
           const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, this.radius);
           gradient.addColorStop(0, 'orange');
           gradient.addColorStop(0.7, 'red');
@@ -1627,7 +2222,6 @@
           ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
           ctx.fill();
           
-          
           ctx.strokeStyle = 'rgba(255, 165, 0, 0.7)';
           ctx.lineWidth = 3;
           ctx.beginPath();
@@ -1637,7 +2231,6 @@
           
           ctx.restore();
         } else if (this.fireDuration > 0) {
-         
           const gradient = ctx.createRadialGradient(
             this.x, this.y, 0,
             this.x, this.y, this.fireRadius
@@ -1650,16 +2243,6 @@
           ctx.beginPath();
           ctx.arc(this.x, this.y, this.fireRadius * (this.fireDuration / 180), 0, Math.PI * 2);
           ctx.fill();
-          
-         
-          if (this.fireDuration % 10 === 0) {
-            [...enemies, ...bosses].forEach(e => {
-              const dist = Math.hypot(this.x - e.x, this.y - e.y);
-              if (dist < this.fireRadius) {
-                e.takeDamage(10);
-              }
-            });
-          }
         }
       }
       
@@ -1689,6 +2272,19 @@
           break;
           
         case "multi":
+          // Visual effect for multi-arrow
+          for (let i = 0; i < 20; i++) {
+            const particleAngle = Math.random() * Math.PI * 2;
+            const particleDist = Math.random() * 50;
+            const particleX = player.x + Math.cos(particleAngle) * particleDist;
+            const particleY = player.y + Math.sin(particleAngle) * particleDist;
+            
+            ctx.fillStyle = hellMode ? 'rgba(255, 100, 100, 0.7)' : 'rgba(0, 255, 255, 0.7)';
+            ctx.beginPath();
+            ctx.arc(particleX, particleY, 3, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          
           for (let i = -11; i <= 11; i++) {
             arrows.push(new Arrow(player.x, player.y, angle + i * 0.03));
           }
@@ -1731,9 +2327,31 @@
         case "shield":
           player.shieldActive = true;
           player.shieldTimer = 360;
+          
+          // Shield activation effect
+          for (let i = 0; i < 30; i++) {
+            const shieldAngle = Math.random() * Math.PI * 2;
+            const shieldDist = Math.random() * 40;
+            const shieldX = player.x + Math.cos(shieldAngle) * shieldDist;
+            const shieldY = player.y + Math.sin(shieldAngle) * shieldDist;
+            
+            ctx.fillStyle = hellMode ? 'rgba(255, 100, 100, 0.7)' : 'rgba(0, 200, 255, 0.7)';
+            ctx.beginPath();
+            ctx.arc(shieldX, shieldY, 4, 0, Math.PI * 2);
+            ctx.fill();
+          }
           break;
           
         case "meteor":
+          // Meteor call effect
+          for (let i = 0; i < 50; i++) {
+            const starX = Math.random() * canvas.width;
+            const starY = Math.random() * canvas.height / 2;
+            const starSize = Math.random() * 3 + 1;
+            
+            ctx.fillStyle = 'rgba(255, 255, 200, 0.8)';
+            ctx.fillRect(starX, starY, starSize, starSize);
+          }
           
           for (let i = 0; i < 18; i++) {
             setTimeout(() => {
@@ -1753,14 +2371,46 @@
         this.radius = 100;
         this.maxRadius = 100;
         this.lifetime = 100;
+        this.particles = [];
+        
+        // Create explosion particles
+        for (let i = 0; i < 50; i++) {
+          const angle = Math.random() * Math.PI * 2;
+          const speed = Math.random() * 5 + 2;
+          this.particles.push({
+            x: this.x,
+            y: this.y,
+            dx: Math.cos(angle) * speed,
+            dy: Math.sin(angle) * speed,
+            size: Math.random() * 5 + 2,
+            life: Math.random() * 30 + 20
+          });
+        }
       }
       
       update() {
         this.lifetime--;
         this.radius = this.maxRadius * (this.lifetime / 30);
+        
+        // Update particles
+        this.particles = this.particles.filter(p => p.life > 0);
+        this.particles.forEach(p => {
+          p.x += p.dx;
+          p.y += p.dy;
+          p.life--;
+          p.size *= 0.95;
+        });
       }
       
       draw() {
+        // Draw particles
+        this.particles.forEach(p => {
+          ctx.fillStyle = `rgba(255, ${100 + Math.floor(p.life * 5)}, 0, ${p.life / 50})`;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+          ctx.fill();
+        });
+        
         const gradient = ctx.createRadialGradient(
           this.x, this.y, 0,
           this.x, this.y, this.radius
@@ -1780,6 +2430,13 @@
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.radius * 0.7, 0, Math.PI * 2);
         ctx.stroke();
+        
+        // Shockwave effect
+        ctx.strokeStyle = `rgba(255, 200, 100, ${this.lifetime / 100})`;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius * 1.2, 0, Math.PI * 2);
+        ctx.stroke();
       }
     }
 
@@ -1789,13 +2446,51 @@
         this.y = y;
         this.radius = 500;
         this.lifetime = 60;
+        this.snowParticles = [];
+        
+        // Create initial snow particles
+        for (let i = 0; i < 100; i++) {
+          this.snowParticles.push({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            size: Math.random() * 4 + 1,
+            speed: Math.random() * 2 + 1
+          });
+        }
       }
       
       update() {
         this.lifetime--;
+        
+        // Update snow particles
+        this.snowParticles.forEach(p => {
+          p.y += p.speed;
+          if (p.y > canvas.height) {
+            p.y = 0;
+            p.x = Math.random() * canvas.width;
+          }
+        });
+        
+        // Add new snow particles
+        if (this.lifetime % 5 === 0) {
+          this.snowParticles.push({
+            x: Math.random() * canvas.width,
+            y: 0,
+            size: Math.random() * 4 + 1,
+            speed: Math.random() * 2 + 1
+          });
+        }
       }
       
       draw() {
+        // Draw snow particles
+        this.snowParticles.forEach(p => {
+          ctx.fillStyle = `rgba(255, 255, 255, ${this.lifetime / 60})`;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+          ctx.fill();
+        });
+        
         const gradient = ctx.createRadialGradient(
           this.x, this.y, 0,
           this.x, this.y, this.radius
@@ -1820,7 +2515,7 @@
           );
           ctx.rotate(Math.random() * Math.PI * 2);
           
-          ctx.fillStyle = 'rgba(200, 240, 255, 0.8)';
+          ctx.fillStyle = `rgba(200, 240, 255, ${this.lifetime / 60})`;
           ctx.beginPath();
           ctx.moveTo(0, -size/2);
           ctx.lineTo(size/3, 0);
@@ -1831,6 +2526,29 @@
           
           ctx.restore();
         }
+        
+        // Ice crystal effect at center
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        
+        for (let i = 0; i < 6; i++) {
+          const angle = (i / 6) * Math.PI * 2;
+          ctx.save();
+          ctx.rotate(angle);
+          
+          ctx.fillStyle = `rgba(200, 240, 255, ${this.lifetime / 60})`;
+          ctx.beginPath();
+          ctx.moveTo(0, -30);
+          ctx.lineTo(10, -20);
+          ctx.lineTo(0, -10);
+          ctx.lineTo(-10, -20);
+          ctx.closePath();
+          ctx.fill();
+          
+          ctx.restore();
+        }
+        
+        ctx.restore();
       }
     }
 
@@ -1839,13 +2557,26 @@
         this.source = source;
         this.targets = targets;
         this.lifetime = 20;
+        this.branches = [];
+        
+        // Create lightning branches between targets
+        for (let i = 0; i < targets.length - 1; i++) {
+          if (Math.random() < 0.7) {
+            this.branches.push({
+              from: targets[i],
+              to: targets[i + 1]
+            });
+          }
+        }
       }
       
       draw() {
         if (this.lifetime <= 0) return;
         this.lifetime--;
         
-        ctx.strokeStyle = `rgba(0, 200, 255, ${this.lifetime / 15})`;
+        const intensity = this.lifetime / 20;
+        
+        ctx.strokeStyle = `rgba(0, 200, 255, ${intensity})`;
         ctx.lineWidth = 3;
         ctx.shadowBlur = 10;
         ctx.shadowColor = 'cyan';
@@ -1868,8 +2599,33 @@
           }
           
           ctx.stroke();
+          
+          // Draw lightning impact effect on target
+          ctx.beginPath();
+          ctx.arc(target.x, target.y, 15 * intensity, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(0, 200, 255, ${intensity * 0.5})`;
+          ctx.fill();
+          
           lastX = target.x;
           lastY = target.y;
+        }
+        
+        // Draw branches
+        for (const branch of this.branches) {
+          ctx.beginPath();
+          ctx.moveTo(branch.from.x, branch.from.y);
+          
+          const steps = 5;
+          const dx = (branch.to.x - branch.from.x) / steps;
+          const dy = (branch.to.y - branch.from.y) / steps;
+          
+          for (let i = 1; i <= steps; i++) {
+            const x = branch.from.x + dx * i + (Math.random() * 15 - 7.5);
+            const y = branch.from.y + dy * i + (Math.random() * 15 - 7.5);
+            ctx.lineTo(x, y);
+          }
+          
+          ctx.stroke();
         }
         
         ctx.shadowBlur = 0;
@@ -1887,7 +2643,6 @@
       ctx.font = "16px 'Press Start 2P', cursive";
       ctx.fillText(`VIDA: ${Math.floor(player.health)}/${player.maxHealth}`, 30, 45);
       
-     
       let cooldownMax = 0;
       let cooldownCurrent = 0;
       let cooldownWidth = 0;
@@ -1993,32 +2748,26 @@
       enemies = [];
       bosses = [];
       
-     
       if (player) {
         player.x = canvas.width / 2;
         player.y = canvas.height / 2;
       }
       
       if (hellBossWave) {
-        l
         bosses.push(new Enemy(9, wave));
         waveDisplay.textContent = `WAVE: ${wave} (DEVORADOR DE ALMAS)`;
       }
       else if (finalBossWave) {
-       
         bosses.push(new Enemy(8, wave));
         waveDisplay.textContent = `WAVE: ${wave} (IMPERADOR DO MUNDO)`;
       } else if (bossWave) {
         if (wave === 5) {
-          
           bosses.push(new Enemy(6, wave));
           waveDisplay.textContent = `WAVE: ${wave} (REI VIOLETA)`;
         } else if (wave === 10) {
-         
           bosses.push(new Enemy(7, wave));
           waveDisplay.textContent = `WAVE: ${wave} (REI DOURADO)`;
         } else {
-         
           bosses.push(new Enemy(6, wave));
           waveDisplay.textContent = `WAVE: ${wave} (REI VIOLETA)`;
         }
@@ -2118,13 +2867,12 @@
     function gameLoop() {
       if (!gameActive) return;
       
-     
+      // Clear canvas with background effect
       if (hellMode) {
-        
         ctx.fillStyle = '#290a0a';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         
-        
+        // Hell background effect
         for (let i = 0; i < 30; i++) {
           const x = Math.random() * canvas.width;
           const y = Math.random() * canvas.height;
@@ -2137,10 +2885,10 @@
           ctx.fill();
         }
       } else {
-       
         ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         
+        // Star background effect
         ctx.fillStyle = "white";
         for (let i = 0; i < 150; i++) {
           const alpha = Math.random() * 0.8 + 0.2;
@@ -2206,6 +2954,13 @@
         if (Math.hypot(player.x - e.x, player.y - e.y) < player.radius + e.radius) {
           player.takeDamage(e.damage);
         }
+        
+        // Check if enemy is in lava
+        lavaPatches.forEach(lava => {
+          if (Math.hypot(e.x - lava.x, e.y - lava.y) < e.radius + lava.radius) {
+            e.applyBurn(5); // 5 seconds burn
+          }
+        });
       });
 
       bosses.forEach(b => {
@@ -2215,6 +2970,13 @@
         if (Math.hypot(player.x - b.x, player.y - b.y) < player.radius + b.radius) {
           player.takeDamage(b.damage);
         }
+        
+        // Check if boss is in lava
+        lavaPatches.forEach(lava => {
+          if (Math.hypot(b.x - lava.x, b.y - lava.y) < b.radius + lava.radius) {
+            b.applyBurn(5); // 5 seconds burn
+          }
+        });
       });
 
       enemyProjectiles = enemyProjectiles.filter(p => p.alive);
@@ -2264,39 +3026,50 @@
         }
       });
 
-      
       meteors = meteors.filter(m => m.isActive());
       meteors.forEach(m => {
         m.update();
         m.draw();
       });
 
-      
       darkMeteors = darkMeteors.filter(m => m.isActive());
       darkMeteors.forEach(m => {
         m.update();
         m.draw();
       });
 
-      
       lavaPatches = lavaPatches.filter(p => p.lifetime > 0);
       lavaPatches.forEach(p => {
         p.lifetime--;
         
-       
+        // Draw lava patch with animation
+        const pulse = Math.sin(Date.now() / 200) * 5;
         const gradient = ctx.createRadialGradient(
           p.x, p.y, 0,
-          p.x, p.y, p.radius
+          p.x, p.y, p.radius + pulse
         );
-        gradient.addColorStop(0, 'rgba(150, 0, 150, 0.8)');
-        gradient.addColorStop(0.7, 'rgba(100, 0, 100, 0.4)');
-        gradient.addColorStop(1, 'rgba(50, 0, 50, 0)');
+        gradient.addColorStop(0, 'rgba(255, 100, 0, 0.8)');
+        gradient.addColorStop(0.5, 'rgba(255, 50, 0, 0.5)');
+        gradient.addColorStop(1, 'rgba(255, 0, 0, 0)');
         
         ctx.fillStyle = gradient;
         ctx.beginPath();
-        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.arc(p.x, p.y, p.radius + pulse, 0, Math.PI * 2);
         ctx.fill();
         
+        // Draw lava bubbles
+        for (let i = 0; i < 3; i++) {
+          const bubbleX = p.x + Math.random() * p.radius * 2 - p.radius;
+          const bubbleY = p.y + Math.random() * p.radius * 2 - p.radius;
+          const bubbleSize = Math.random() * 8 + 2;
+          
+          if (Math.hypot(bubbleX - p.x, bubbleY - p.y) < p.radius) {
+            ctx.fillStyle = `rgba(255, 255, 200, ${Math.random() * 0.5 + 0.3})`;
+            ctx.beginPath();
+            ctx.arc(bubbleX, bubbleY, bubbleSize, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
        
         if (Math.hypot(player.x - p.x, player.y - p.y) < player.radius + p.radius) {
           player.slowTimer = 18;
