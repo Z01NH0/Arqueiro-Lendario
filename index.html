@@ -423,8 +423,8 @@
         }
         document.getElementById('loading-progress').style.width = `${progress}%`;
         document.getElementById('loading-text').textContent = 
-          progress < 30 ? "Carregando recursos..." :
-          progress < 70 ? "Preparando inimigos..." :
+          progress < 30 ? "Carregando recursos épicos..." :
+          progress < 70 ? "Preparando inimigos lendários..." :
           "Quase lá...";
       }, 200);
     }
@@ -538,9 +538,11 @@
         this.bowAnimation = 0;
         this.capeAnimation = 0;
         this.particles = [];
+        this.animationTimer = 0;
       }
 
       update() {
+        this.animationTimer++;
         this.capeAnimation += 0.1;
         
         if (this.burnTimer > 0) {
@@ -835,6 +837,10 @@
       applyBurn(duration) {
         this.burnTimer = Math.max(this.burnTimer, duration * 60);
       }
+      
+      applySlow(duration) {
+        this.slowTimer = Math.max(this.slowTimer, duration * 60);
+      }
     }
 
     class Arrow {
@@ -852,6 +858,7 @@
         this.pierce = 0;
         this.trail = [];
         this.particles = [];
+        this.animationTimer = 0;
         
         if (specialEffect === 'lightning') {
           this.damage = 40;
@@ -862,6 +869,7 @@
       }
 
       update() {
+        this.animationTimer++;
         // Store trail positions
         if (this.trail.length > 5) this.trail.shift();
         this.trail.push({x: this.x, y: this.y});
@@ -1060,6 +1068,8 @@
             this.damage = 0.5;
             this.scoreValue = 10;
             this.burnTimer = 0;
+            this.particles = [];
+            this.animationTimer = 0;
             break;
           case 2: // Tank enemy
             this.radius = 22;
@@ -1069,6 +1079,8 @@
             this.damage = 0.8;
             this.scoreValue = 25;
             this.burnTimer = 0;
+            this.particles = [];
+            this.animationTimer = 0;
             break;
           case 3: // Fast enemy
             this.radius = 15;
@@ -1078,6 +1090,8 @@
             this.damage = 0.3;
             this.scoreValue = 15;
             this.burnTimer = 0;
+            this.particles = [];
+            this.animationTimer = 0;
             break;
           case 4: // Big enemy
             this.radius = 30;
@@ -1087,6 +1101,8 @@
             this.damage = 1.2;
             this.scoreValue = 40;
             this.burnTimer = 0;
+            this.particles = [];
+            this.animationTimer = 0;
             break;
           case 5: // Ranged enemy
             this.radius = 20;
@@ -1098,6 +1114,8 @@
             this.shootingRange = 300;
             this.scoreValue = 30;
             this.burnTimer = 0;
+            this.particles = [];
+            this.animationTimer = 0;
             break;
           case 6: // Wave 5 Boss - Rei Violeta
             this.radius = 55;
@@ -1111,6 +1129,7 @@
             this.scoreValue = 200;
             this.burnTimer = 0;
             this.animationTimer = 0;
+            this.particles = [];
             break;
           case 7: // Wave 10 Boss - Rei Dourado
             this.radius = 55;
@@ -1123,6 +1142,7 @@
             this.scoreValue = 400;
             this.burnTimer = 0;
             this.animationTimer = 0;
+            this.particles = [];
             break;
           case 8: // Final Boss - Imperador do Mundo
             this.radius = 70;
@@ -1137,6 +1157,7 @@
             this.scoreValue = 1000;
             this.burnTimer = 0;
             this.animationTimer = 0;
+            this.particles = [];
             break;
           case 9: // Hell Boss - Devorador de Almas
             this.radius = 80;
@@ -1153,6 +1174,7 @@
             this.scoreValue = 2000;
             this.burnTimer = 0;
             this.animationTimer = 0;
+            this.particles = [];
             break;
         }
         
@@ -1169,6 +1191,15 @@
       update() {
         this.animationTimer++;
         
+        // Update particles
+        this.particles = this.particles.filter(p => p.life > 0);
+        this.particles.forEach(p => {
+          p.x += p.dx;
+          p.y += p.dy;
+          p.life--;
+          p.size *= 0.95;
+        });
+        
         if (this.burnTimer > 0) {
           this.burnTimer--;
           this.burnDamageTimer--;
@@ -1176,6 +1207,19 @@
           if (this.burnDamageTimer <= 0) {
             this.takeDamage(10);
             this.burnDamageTimer = 60; // Damage every second
+            
+            // Add burn particles
+            for (let i = 0; i < 3; i++) {
+              this.particles.push({
+                x: this.x + (Math.random() - 0.5) * this.radius * 2,
+                y: this.y + (Math.random() - 0.5) * this.radius * 2,
+                dx: (Math.random() - 0.5) * 2,
+                dy: -Math.random() * 3 - 1,
+                size: Math.random() * 3 + 2,
+                life: 30,
+                color: `rgba(255, ${100 + Math.random() * 100}, 0, 0.8)`
+              });
+            }
           }
         }
         
@@ -1208,6 +1252,20 @@
             const shootAngle = Math.atan2(player.y - this.y, player.x - this.x);
             enemyProjectiles.push(new EnemyProjectile(this.x, this.y, shootAngle, this.type));
             this.shootCooldown = 90;
+            
+            // Casting effect
+            for (let i = 0; i < 10; i++) {
+              const particleAngle = shootAngle + (Math.random() - 0.5) * 0.5;
+              this.particles.push({
+                x: this.x,
+                y: this.y,
+                dx: Math.cos(particleAngle) * 3,
+                dy: Math.sin(particleAngle) * 3,
+                size: Math.random() * 3 + 2,
+                life: 20,
+                color: hellMode ? '#ff00ff' : '#aa00aa'
+              });
+            }
           }
           
           if (this.shootCooldown > 0) this.shootCooldown--;
@@ -1228,6 +1286,20 @@
               const shootAngle = Math.atan2(player.y - this.y, player.x - this.x);
               enemyProjectiles.push(new EnemyProjectile(this.x, this.y, shootAngle, this.type));
               this.shootCooldown = 20;
+              
+              // Casting effect
+              for (let i = 0; i < 15; i++) {
+                const particleAngle = shootAngle + (Math.random() - 0.5) * 0.3;
+                this.particles.push({
+                  x: this.x,
+                  y: this.y,
+                  dx: Math.cos(particleAngle) * 4,
+                  dy: Math.sin(particleAngle) * 4,
+                  size: Math.random() * 4 + 2,
+                  life: 25,
+                  color: hellMode ? '#ff00ff' : '#aa00aa'
+                });
+              }
             }
           }
           else if (this.type === 7) {
@@ -1237,6 +1309,20 @@
                 enemyProjectiles.push(new EnemyProjectile(this.x, this.y, shootAngle + (i * 0.3), this.type));
               }
               this.shootCooldown = 80;
+              
+              // Casting effect
+              for (let i = 0; i < 20; i++) {
+                const particleAngle = shootAngle + (Math.random() - 0.5) * 0.5;
+                this.particles.push({
+                  x: this.x,
+                  y: this.y,
+                  dx: Math.cos(particleAngle) * 5,
+                  dy: Math.sin(particleAngle) * 5,
+                  size: Math.random() * 4 + 2,
+                  life: 25,
+                  color: hellMode ? '#ffff00' : '#ffcc00'
+                });
+              }
             }
             
             this.specialCooldown--;
@@ -1246,6 +1332,20 @@
                 enemyProjectiles.push(new EnemyProjectile(this.x, this.y, angle, 'energy'));
               }
               this.specialCooldown = 500;
+              
+              // Special attack effect
+              for (let i = 0; i < 50; i++) {
+                const particleAngle = Math.random() * Math.PI * 2;
+                this.particles.push({
+                  x: this.x,
+                  y: this.y,
+                  dx: Math.cos(particleAngle) * 6,
+                  dy: Math.sin(particleAngle) * 6,
+                  size: Math.random() * 5 + 3,
+                  life: 30,
+                  color: hellMode ? '#ffff00' : '#ffcc00'
+                });
+              }
             }
           }
           else if (this.type === 8) { 
@@ -1255,6 +1355,20 @@
               this.damage *= 1.5;
               this.auraActive = true;
               this.speed *= 1.2;
+              
+              // Phase change effect
+              for (let i = 0; i < 100; i++) {
+                const particleAngle = Math.random() * Math.PI * 2;
+                this.particles.push({
+                  x: this.x,
+                  y: this.y,
+                  dx: Math.cos(particleAngle) * 8,
+                  dy: Math.sin(particleAngle) * 8,
+                  size: Math.random() * 6 + 3,
+                  life: 40,
+                  color: '#ff0000'
+                });
+              }
             }
             
             this.minionCooldown--;
@@ -1263,6 +1377,20 @@
               enemies.push(new Enemy(1, this.wave + 5));
               enemies.push(new Enemy(3, this.wave + 5));
               this.minionCooldown = minionInterval;
+              
+              // Minion summon effect
+              for (let i = 0; i < 30; i++) {
+                const particleAngle = Math.random() * Math.PI * 2;
+                this.particles.push({
+                  x: this.x,
+                  y: this.y,
+                  dx: Math.cos(particleAngle) * 5,
+                  dy: Math.sin(particleAngle) * 5,
+                  size: Math.random() * 4 + 2,
+                  life: 25,
+                  color: '#ff5500'
+                });
+              }
             }
             
             if (this.shootCooldown <= 0) {
@@ -1271,6 +1399,20 @@
                 enemyProjectiles.push(new EnemyProjectile(this.x, this.y, shootAngle + (i * Math.PI / 6), this.type));
               }
               this.shootCooldown = 40;
+              
+              // Casting effect
+              for (let i = 0; i < 25; i++) {
+                const particleAngle = shootAngle + (Math.random() - 0.5) * 0.5;
+                this.particles.push({
+                  x: this.x,
+                  y: this.y,
+                  dx: Math.cos(particleAngle) * 6,
+                  dy: Math.sin(particleAngle) * 6,
+                  size: Math.random() * 5 + 3,
+                  life: 25,
+                  color: '#ff3300'
+                });
+              }
             }
           }
           else if (this.type === 9) {
@@ -1279,6 +1421,20 @@
               this.x = Math.random() * (canvas.width - 200) + 100;
               this.y = Math.random() * (canvas.height - 200) + 100;
               this.teleportCooldown = 90;
+              
+              // Teleport effect
+              for (let i = 0; i < 80; i++) {
+                const particleAngle = Math.random() * Math.PI * 2;
+                this.particles.push({
+                  x: this.x,
+                  y: this.y,
+                  dx: Math.cos(particleAngle) * 10,
+                  dy: Math.sin(particleAngle) * 10,
+                  size: Math.random() * 6 + 3,
+                  life: 35,
+                  color: '#9900ff'
+                });
+              }
             }
             
             this.shootCooldown--;
@@ -1288,6 +1444,20 @@
                 enemyProjectiles.push(new EnemyProjectile(this.x, this.y, angle + (i * 0.3), this.type));
               }
               this.shootCooldown = 240;
+              
+              // Casting effect
+              for (let i = 0; i < 30; i++) {
+                const particleAngle = angle + (Math.random() - 0.5) * 0.5;
+                this.particles.push({
+                  x: this.x,
+                  y: this.y,
+                  dx: Math.cos(particleAngle) * 7,
+                  dy: Math.sin(particleAngle) * 7,
+                  size: Math.random() * 5 + 3,
+                  life: 30,
+                  color: '#ff00ff'
+                });
+              }
             }
             
             if (this.shootCooldown === 180) {
@@ -1300,6 +1470,20 @@
             if (this.meteorCooldown <= 0) {
               darkMeteors.push(new DarkMeteor(player.x, player.y));
               this.meteorCooldown = 240;
+              
+              // Meteor cast effect
+              for (let i = 0; i < 40; i++) {
+                const particleAngle = Math.random() * Math.PI * 2;
+                this.particles.push({
+                  x: this.x,
+                  y: this.y,
+                  dx: Math.cos(particleAngle) * 8,
+                  dy: Math.sin(particleAngle) * 8,
+                  size: Math.random() * 6 + 3,
+                  life: 35,
+                  color: '#660066'
+                });
+              }
             }
             
             this.radialAttackCooldown--;
@@ -1309,6 +1493,20 @@
                 enemyProjectiles.push(new EnemyProjectile(this.x, this.y, angle, 'burning'));
               }
               this.radialAttackCooldown = 600;
+              
+              // Radial attack effect
+              for (let i = 0; i < 60; i++) {
+                const particleAngle = Math.random() * Math.PI * 2;
+                this.particles.push({
+                  x: this.x,
+                  y: this.y,
+                  dx: Math.cos(particleAngle) * 9,
+                  dy: Math.sin(particleAngle) * 9,
+                  size: Math.random() * 6 + 3,
+                  life: 40,
+                  color: '#ff0000'
+                });
+              }
             }
           }
           
@@ -1322,6 +1520,16 @@
       }
 
       draw() {
+        // Draw particles
+        this.particles.forEach(p => {
+          ctx.globalAlpha = p.life / 30;
+          ctx.fillStyle = p.color;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+          ctx.fill();
+        });
+        ctx.globalAlpha = 1;
+        
         ctx.save();
         ctx.translate(this.x, this.y);
         
@@ -1916,6 +2124,19 @@
       takeDamage(amount) {
         this.health -= amount;
         this.hitFlash = 3;
+        
+        // Damage particles
+        for (let i = 0; i < 5; i++) {
+          this.particles.push({
+            x: this.x,
+            y: this.y,
+            dx: (Math.random() - 0.5) * 5,
+            dy: (Math.random() - 0.5) * 5,
+            size: Math.random() * 3 + 2,
+            life: 15,
+            color: '#ffffff'
+          });
+        }
       }
       
       stun(duration) {
@@ -1935,14 +2156,51 @@
         this.radius = 60;
         this.lifetime = 240; 
         this.damage = 0.8;
+        this.particles = [];
       }
       
       update() {
         this.lifetime--;
         this.radius = 60 * (this.lifetime / 240);
+        
+        // Add fire particles
+        if (this.lifetime % 5 === 0) {
+          for (let i = 0; i < 3; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const dist = Math.random() * this.radius;
+            this.particles.push({
+              x: this.x + Math.cos(angle) * dist,
+              y: this.y + Math.sin(angle) * dist,
+              dx: (Math.random() - 0.5) * 2,
+              dy: -Math.random() * 3 - 1,
+              size: Math.random() * 4 + 2,
+              life: 30,
+              color: `rgba(255, ${100 + Math.random() * 100}, 0, 0.8)`
+            });
+          }
+        }
+        
+        // Update particles
+        this.particles = this.particles.filter(p => p.life > 0);
+        this.particles.forEach(p => {
+          p.x += p.dx;
+          p.y += p.dy;
+          p.life--;
+          p.size *= 0.95;
+        });
       }
       
       draw() {
+        // Draw particles
+        this.particles.forEach(p => {
+          ctx.globalAlpha = p.life / 30;
+          ctx.fillStyle = p.color;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+          ctx.fill();
+        });
+        ctx.globalAlpha = 1;
+        
         const gradient = ctx.createRadialGradient(
           this.x, this.y, 0,
           this.x, this.y, this.radius
@@ -1978,6 +2236,7 @@
           this.color = "cyan";
           this.isEnergyBall = true;
           this.homing = false;
+          this.particles = [];
         } 
         else if (enemyType === 'homing') {
           this.speed = 4;
@@ -1986,6 +2245,7 @@
           this.color = "#ff00ff";
           this.homing = true;
           this.homingPower = 0.08;
+          this.particles = [];
         }
         else if (enemyType === 'burning') {
           this.speed = 5;
@@ -1994,6 +2254,7 @@
           this.color = "#ff0000";
           this.homing = false;
           this.burning = true;
+          this.particles = [];
         }
         else {
           this.speed = enemyType === 7 ? 6 : enemyType === 6 ? 7 : 5;
@@ -2003,13 +2264,16 @@
           this.isEnergyBall = false;
           this.homing = enemyType === 9;
           this.homingPower = enemyType === 9 ? 0.05 : 0;
+          this.particles = [];
         }
         
         this.alive = true;
         this.trail = [];
+        this.animationTimer = 0;
       }
 
       update() {
+        this.animationTimer++;
         // Store trail positions
         if (this.trail.length > 5) this.trail.shift();
         this.trail.push({x: this.x, y: this.y});
@@ -2023,12 +2287,39 @@
         this.x += Math.cos(this.angle) * this.speed;
         this.y += Math.sin(this.angle) * this.speed;
         
+        // Add particles
+        if (this.animationTimer % 3 === 0) {
+          this.particles.push({
+            x: this.x,
+            y: this.y,
+            dx: (Math.random() - 0.5) * 2,
+            dy: (Math.random() - 0.5) * 2,
+            size: Math.random() * 3 + 1,
+            life: 20,
+            color: this.burning ? '#ff5500' : this.color
+          });
+        }
+        
         if (this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height) {
           this.alive = false;
         }
+        
+        // Update particles
+        this.particles = this.particles.filter(p => p.life > 0);
+        this.particles.forEach(p => p.life--);
       }
 
       draw() {
+        // Draw particles
+        this.particles.forEach(p => {
+          ctx.globalAlpha = p.life / 20;
+          ctx.fillStyle = p.color;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+          ctx.fill();
+        });
+        ctx.globalAlpha = 1;
+        
         // Draw trail
         if (this.trail.length > 1) {
           ctx.strokeStyle = this.burning ? 'rgba(255, 100, 0, 0.3)' : 'rgba(200, 200, 255, 0.3)';
@@ -2105,9 +2396,10 @@
         this.radius = 30;
         this.damage = 50;
         this.impacted = false;
-        this.lavaDuration = 300; 
-        this.lavaRadius = 70;
+        this.darkDuration = 300; 
+        this.darkRadius = 70;
         this.trail = [];
+        this.particles = [];
       }
       
       update() {
@@ -2120,24 +2412,57 @@
           this.x += Math.cos(angle) * this.speed;
           this.y += Math.sin(angle) * this.speed;
           
+          // Add particles
+          if (Math.random() < 0.3) {
+            this.particles.push({
+              x: this.x,
+              y: this.y,
+              dx: (Math.random() - 0.5) * 3,
+              dy: (Math.random() - 0.5) * 3,
+              size: Math.random() * 4 + 2,
+              life: 25,
+              color: `rgba(${100 + Math.random() * 100}, 0, ${100 + Math.random() * 100}, 0.8)`
+            });
+          }
+          
           if (Math.hypot(this.targetX - this.x, this.targetY - this.y) < 10) {
             this.impacted = true;
             
-            lavaPatches.push({
+            darkPatches.push({
               x: this.x,
               y: this.y,
-              radius: this.lavaRadius,
-              lifetime: this.lavaDuration
+              radius: this.darkRadius,
+              lifetime: this.darkDuration
             });
             
             if (Math.hypot(player.x - this.x, player.y - this.y) < player.radius + this.radius) {
               player.takeDamage(this.damage);
+              player.applySlow(5); // 5 seconds slow
             }
           }
         }
+        
+        // Update particles
+        this.particles = this.particles.filter(p => p.life > 0);
+        this.particles.forEach(p => {
+          p.x += p.dx;
+          p.y += p.dy;
+          p.life--;
+          p.size *= 0.95;
+        });
       }
       
       draw() {
+        // Draw particles
+        this.particles.forEach(p => {
+          ctx.globalAlpha = p.life / 25;
+          ctx.fillStyle = p.color;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+          ctx.fill();
+        });
+        ctx.globalAlpha = 1;
+        
         // Draw trail
         if (this.trail.length > 1 && !this.impacted) {
           ctx.strokeStyle = 'rgba(150, 0, 150, 0.3)';
@@ -2190,6 +2515,8 @@
         this.floatOffset = Math.random() * Math.PI * 2;
         this.floatSpeed = Math.random() * 0.05 + 0.05;
         this.originalY = this.y;
+        this.particles = [];
+        this.animationTimer = 0;
       }
       
       getRandomType() {
@@ -2202,13 +2529,46 @@
       }
 
       update() {
+        this.animationTimer++;
         this.floatOffset += this.floatSpeed;
         this.y = this.originalY + Math.sin(this.floatOffset) * 10;
         this.lifetime--;
+        
+        // Add particles
+        if (this.animationTimer % 10 === 0) {
+          this.particles.push({
+            x: this.x,
+            y: this.y,
+            dx: (Math.random() - 0.5) * 1,
+            dy: (Math.random() - 0.5) * 1,
+            size: Math.random() * 3 + 2,
+            life: 30,
+            color: hellMode ? '#ff5555' : '#00ffff'
+          });
+        }
+        
+        // Update particles
+        this.particles = this.particles.filter(p => p.life > 0);
+        this.particles.forEach(p => {
+          p.x += p.dx;
+          p.y += p.dy;
+          p.life--;
+          p.size *= 0.95;
+        });
       }
 
       draw() {
         this.update();
+        
+        // Draw particles
+        this.particles.forEach(p => {
+          ctx.globalAlpha = p.life / 30;
+          ctx.fillStyle = p.color;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+          ctx.fill();
+        });
+        ctx.globalAlpha = 1;
         
         ctx.save();
         ctx.translate(this.x, this.y);
@@ -2309,6 +2669,7 @@
         this.fireDuration = 180;
         this.fireRadius = 80;
         this.trail = [];
+        this.particles = [];
       }
       
       update() {
@@ -2321,6 +2682,19 @@
           this.x += Math.cos(angle) * this.speed;
           this.y += Math.sin(angle) * this.speed;
           
+          // Add particles
+          if (Math.random() < 0.3) {
+            this.particles.push({
+              x: this.x,
+              y: this.y,
+              dx: (Math.random() - 0.5) * 3,
+              dy: (Math.random() - 0.5) * 3,
+              size: Math.random() * 4 + 2,
+              life: 25,
+              color: `rgba(255, ${100 + Math.random() * 100}, 0, 0.8)`
+            });
+          }
+          
           if (Math.hypot(this.targetX - this.x, this.targetY - this.y) < 10) {
             this.impacted = true;
             
@@ -2328,6 +2702,7 @@
               const dist = Math.hypot(this.x - e.x, this.y - e.y);
               if (dist < this.radius + e.radius) {
                 e.takeDamage(this.damage);
+                e.applyBurn(5); // 5 seconds burn
               }
             });
             
@@ -2342,9 +2717,28 @@
         } else {
           this.fireDuration--;
         }
+        
+        // Update particles
+        this.particles = this.particles.filter(p => p.life > 0);
+        this.particles.forEach(p => {
+          p.x += p.dx;
+          p.y += p.dy;
+          p.life--;
+          p.size *= 0.95;
+        });
       }
       
       draw() {
+        // Draw particles
+        this.particles.forEach(p => {
+          ctx.globalAlpha = p.life / 25;
+          ctx.fillStyle = p.color;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+          ctx.fill();
+        });
+        ctx.globalAlpha = 1;
+        
         // Draw trail
         if (this.trail.length > 1 && !this.impacted) {
           ctx.strokeStyle = 'rgba(255, 100, 0, 0.3)';
@@ -2983,7 +3377,7 @@
     }
 
     let player, arrows, enemies, bosses, powerUps, enemyProjectiles;
-    let explosions, freezeEffects, lightningEffects, meteors, darkMeteors, lavaPatches;
+    let explosions, freezeEffects, lightningEffects, meteors, darkMeteors, lavaPatches, darkPatches;
     let currentWave, waveTimer, gameOver;
 
     function init() {
@@ -2999,6 +3393,7 @@
       meteors = [];
       darkMeteors = [];
       lavaPatches = [];
+      darkPatches = [];
       
       if (hellMode) {
         currentWave = 16;
@@ -3064,7 +3459,7 @@
         
         ctx.font = "24px 'Press Start 2P', cursive";
         ctx.fillStyle = "white";
-        ctx.fillText(`VOCÊ CHEGOU ATÉ A WAVE ${currentWave}`, canvas.width / 2, canvas.height / 2 + 20);
+        ctx.fillText(`VOCÊ CHEGOU ATÊ A WAVE ${currentWave}`, canvas.width / 2, canvas.height / 2 + 20);
         ctx.fillText(`PONTUAÇÃO: ${score}`, canvas.width / 2, canvas.height / 2 + 60);
         
         if (score > highScore) {
@@ -3224,6 +3619,48 @@
           player.slowTimer = 18;
           if (p.lifetime % 60 === 0) { 
             player.takeDamage(10);
+          }
+        }
+      });
+
+      darkPatches = darkPatches.filter(p => p.lifetime > 0);
+      darkPatches.forEach(p => {
+        p.lifetime--;
+        
+        // Draw dark patch with animation
+        const pulse = Math.sin(Date.now() / 200) * 5;
+        const gradient = ctx.createRadialGradient(
+          p.x, p.y, 0,
+          p.x, p.y, p.radius + pulse
+        );
+        gradient.addColorStop(0, 'rgba(100, 0, 150, 0.8)');
+        gradient.addColorStop(0.5, 'rgba(50, 0, 100, 0.5)');
+        gradient.addColorStop(1, 'rgba(0, 0, 50, 0)');
+        
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius + pulse, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Draw dark energy effects
+        for (let i = 0; i < 3; i++) {
+          const energyX = p.x + Math.random() * p.radius * 2 - p.radius;
+          const energyY = p.y + Math.random() * p.radius * 2 - p.radius;
+          const energySize = Math.random() * 6 + 2;
+          
+          if (Math.hypot(energyX - p.x, energyY - p.y) < p.radius) {
+            ctx.fillStyle = `rgba(200, 100, 255, ${Math.random() * 0.5 + 0.3})`;
+            ctx.beginPath();
+            ctx.arc(energyX, energyY, energySize, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+       
+        if (Math.hypot(player.x - p.x, player.y - p.y) < player.radius + p.radius) {
+          player.applySlow(0.5); // 30% slow
+          player.applyBurn(0.5); // 0.5 seconds burn
+          if (p.lifetime % 60 === 0) { 
+            player.takeDamage(15);
           }
         }
       });
