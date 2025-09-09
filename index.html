@@ -423,8 +423,8 @@
         }
         document.getElementById('loading-progress').style.width = `${progress}%`;
         document.getElementById('loading-text').textContent = 
-          progress < 30 ? "Carregando recursos épicos..." :
-          progress < 70 ? "Preparando inimigos lendários..." :
+          progress < 30 ? "Carregando recursos..." :
+          progress < 70 ? "Preparando inimigos..." :
           "Quase lá...";
       }, 200);
     }
@@ -1572,459 +1572,1085 @@
         ctx.fillStyle = this.isFrozen ? this.frozenColor : this.color;
         
         switch(this.type) {
-          case 1: // Basic enemy - Goblin
-            ctx.beginPath();
-            ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
-            ctx.fill();
+         case 1: // Goblin detalhado
+  ctx.save();
+  
+  // Corpo principal
+  const bodyGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, this.radius);
+  bodyGradient.addColorStop(0, hellMode ? "#ff6b6b" : "#ff8e8e");
+  bodyGradient.addColorStop(1, hellMode ? "#d13434" : "#d86060");
+  
+  ctx.fillStyle = bodyGradient;
+  ctx.beginPath();
+  ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // Padrão de pele
+  ctx.strokeStyle = hellMode ? "#8b0000" : "#a52a2a";
+  ctx.lineWidth = 1;
+  for (let i = 0; i < 8; i++) {
+    const angle = (i / 8) * Math.PI * 2;
+    ctx.beginPath();
+    ctx.moveTo(
+      Math.cos(angle) * this.radius * 0.7,
+      Math.sin(angle) * this.radius * 0.7
+    );
+    ctx.lineTo(
+      Math.cos(angle) * this.radius,
+      Math.sin(angle) * this.radius
+    );
+    ctx.stroke();
+  }
+  
+  // Olhos brilhantes
+  ctx.fillStyle = hellMode ? "#ff0000" : "#00ff00";
+  ctx.beginPath();
+  ctx.arc(-6, -4, 4, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(6, -4, 4, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // Pupilas
+  ctx.fillStyle = "#000";
+  ctx.beginPath();
+  ctx.arc(-5, -4, 1.5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(7, -4, 1.5, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // Brilho nos olhos (animação)
+  const eyeGlow = Math.sin(this.animationTimer * 0.2) * 0.5 + 0.5;
+  ctx.fillStyle = `rgba(255, 255, 255, ${eyeGlow * 0.7})`;
+  ctx.beginPath();
+  ctx.arc(-4, -5, 1.5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(8, -5, 1.5, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // Boca com dentes afiados
+  ctx.fillStyle = "#000";
+  ctx.beginPath();
+  ctx.arc(0, 5, 6, 0.2, Math.PI - 0.2);
+  ctx.fill();
+  
+  ctx.fillStyle = "#fff";
+  for (let i = -2; i <= 2; i++) {
+    if (i === 0) continue;
+    ctx.beginPath();
+    ctx.moveTo(i * 2, 5);
+    ctx.lineTo(i * 2 - 1, 8);
+    ctx.lineTo(i * 2 + 1, 8);
+    ctx.closePath();
+    ctx.fill();
+  }
+  
+  // Chifres
+  ctx.fillStyle = hellMode ? "#600000" : "#5d4037";
+  ctx.beginPath();
+  ctx.moveTo(-8, -this.radius);
+  ctx.lineTo(-12, -this.radius - 10);
+  ctx.lineTo(-5, -this.radius - 5);
+  ctx.closePath();
+  ctx.fill();
+  
+  ctx.beginPath();
+  ctx.moveTo(8, -this.radius);
+  ctx.lineTo(12, -this.radius - 10);
+  ctx.lineTo(5, -this.radius - 5);
+  ctx.closePath();
+  ctx.fill();
+  
+  // Orelhas pontudas
+  ctx.fillStyle = hellMode ? "#ff6b6b" : "#ff8e8e";
+  ctx.beginPath();
+  ctx.moveTo(-this.radius + 2, -this.radius + 5);
+  ctx.lineTo(-this.radius - 5, -this.radius - 2);
+  ctx.lineTo(-this.radius + 2, -this.radius - 5);
+  ctx.closePath();
+  ctx.fill();
+  
+  ctx.beginPath();
+  ctx.moveTo(this.radius - 2, -this.radius + 5);
+  ctx.lineTo(this.radius + 5, -this.radius - 2);
+  ctx.lineTo(this.radius - 2, -this.radius - 5);
+  ctx.closePath();
+  ctx.fill();
+  
+  ctx.restore();
+  break;
             
-            // Eyes
-            ctx.fillStyle = "white";
-            ctx.beginPath();
-            ctx.arc(-5, -5, 3, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.beginPath();
-            ctx.arc(5, -5, 3, 0, Math.PI * 2);
-            ctx.fill();
+         case 2: // Orc detalhado
+  ctx.save();
+  
+  // Corpo principal
+  const orcGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, this.radius);
+  orcGradient.addColorStop(0, hellMode ? "#c62828" : "#d32f2f");
+  orcGradient.addColorStop(1, hellMode ? "#8b0000" : "#b71c1c");
+  
+  ctx.fillStyle = orcGradient;
+  ctx.beginPath();
+  ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // Armadura metálica
+  ctx.fillStyle = hellMode ? "#424242" : "#212121";
+  ctx.beginPath();
+  ctx.arc(0, 0, this.radius - 3, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // Detalhes da armadura
+  ctx.fillStyle = hellMode ? "#ff6d00" : "#ffab00";
+  for (let i = 0; i < 8; i++) {
+    const angle = (i / 8) * Math.PI * 2;
+    ctx.beginPath();
+    ctx.arc(
+      Math.cos(angle) * (this.radius - 5),
+      Math.sin(angle) * (this.radius - 5),
+      3, 0, Math.PI * 2
+    );
+    ctx.fill();
+  }
+  
+  // Olhos furiosos
+  ctx.fillStyle = "#ffd54f";
+  ctx.beginPath();
+  ctx.arc(-8, -5, 5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(8, -5, 5, 0, Math.PI * 2);
+  ctx.fill();
+  
+  ctx.fillStyle = "#000";
+  ctx.beginPath();
+  ctx.arc(-7, -5, 2.5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(9, -5, 2.5, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // Sobrancelhas furiosas
+  ctx.strokeStyle = "#000";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(-12, -10);
+  ctx.lineTo(-4, -7);
+  ctx.stroke();
+  
+  ctx.beginPath();
+  ctx.moveTo(12, -10);
+  ctx.lineTo(4, -7);
+  ctx.stroke();
+  
+  // Presas
+  ctx.fillStyle = "#fff";
+  ctx.beginPath();
+  ctx.moveTo(-5, 8);
+  ctx.lineTo(-10, 15);
+  ctx.lineTo(-3, 10);
+  ctx.closePath();
+  ctx.fill();
+  
+  ctx.beginPath();
+  ctx.moveTo(5, 8);
+  ctx.lineTo(10, 15);
+  ctx.lineTo(3, 10);
+  ctx.closePath();
+  ctx.fill();
+  
+  // Cicatrizes
+  ctx.strokeStyle = "#000";
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(-10, 2);
+  ctx.lineTo(-2, 5);
+  ctx.stroke();
+  
+  ctx.beginPath();
+  ctx.moveTo(10, 0);
+  ctx.lineTo(5, 7);
+  ctx.stroke();
+  
+  // Aura de fúria (animação)
+  const rageAura = Math.sin(this.animationTimer * 0.1) * 5 + 10;
+  ctx.beginPath();
+  ctx.arc(0, 0, this.radius + rageAura, 0, Math.PI * 2);
+  const auraGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, this.radius + rageAura);
+  auraGradient.addColorStop(0, 'rgba(255, 0, 0, 0.3)');
+  auraGradient.addColorStop(1, 'rgba(255, 0, 0, 0)');
+  ctx.fillStyle = auraGradient;
+  ctx.fill();
+  
+  ctx.restore();
+  break;
             
-            ctx.fillStyle = "black";
-            ctx.beginPath();
-            ctx.arc(-5, -5, 1, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.beginPath();
-            ctx.arc(5, -5, 1, 0, Math.PI * 2);
-            ctx.fill();
+          case 3: // Imp detalhado
+  ctx.save();
+  
+  // Corpo principal
+  const impGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, this.radius);
+  impGradient.addColorStop(0, hellMode ? "#ffeb3b" : "#fff176");
+  impGradient.addColorStop(1, hellMode ? "#fbc02d" : "#ffd54f");
+  
+  ctx.fillStyle = impGradient;
+  ctx.beginPath();
+  ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // Asas de morcego (com animação)
+  const wingFlap = Math.sin(this.animationTimer * 0.3) * 0.2 + 0.9;
+  
+  ctx.fillStyle = hellMode ? "rgba(0, 0, 0, 0.7)" : "rgba(55, 71, 79, 0.7)";
+  
+  // Asa esquerda
+  ctx.beginPath();
+  ctx.moveTo(-this.radius, 0);
+  ctx.bezierCurveTo(
+    -this.radius * 2.5, -this.radius * wingFlap,
+    -this.radius * 2, this.radius * 1.5,
+    -this.radius, this.radius
+  );
+  ctx.fill();
+  
+  // Asa direita
+  ctx.beginPath();
+  ctx.moveTo(this.radius, 0);
+  ctx.bezierCurveTo(
+    this.radius * 2.5, -this.radius * wingFlap,
+    this.radius * 2, this.radius * 1.5,
+    this.radius, this.radius
+  );
+  ctx.fill();
+  
+  // Detalhes das asas
+  ctx.strokeStyle = hellMode ? "#ff6d00" : "#5d4037";
+  ctx.lineWidth = 1.5;
+  
+  // Estrutura da asa esquerda
+  ctx.beginPath();
+  ctx.moveTo(-this.radius, 0);
+  ctx.lineTo(-this.radius * 1.8, -this.radius * 0.7 * wingFlap);
+  ctx.lineTo(-this.radius * 2.2, -this.radius * 0.3 * wingFlap);
+  ctx.lineTo(-this.radius * 1.5, this.radius * 0.5);
+  ctx.stroke();
+  
+  // Estrutura da asa direita
+  ctx.beginPath();
+  ctx.moveTo(this.radius, 0);
+  ctx.lineTo(this.radius * 1.8, -this.radius * 0.7 * wingFlap);
+  ctx.lineTo(this.radius * 2.2, -this.radius * 0.3 * wingFlap);
+  ctx.lineTo(this.radius * 1.5, this.radius * 0.5);
+  ctx.stroke();
+  
+  // Olhos malignos
+  ctx.fillStyle = "#000";
+  ctx.beginPath();
+  ctx.arc(-4, -2, 3, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(4, -2, 3, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // Brilho nos olhos
+  ctx.fillStyle = hellMode ? "#ff1744" : "#d50000";
+  ctx.beginPath();
+  ctx.arc(-4, -2, 1.5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(4, -2, 1.5, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // Chifres curvados
+  ctx.fillStyle = hellMode ? "#4a148c" : "#5d4037";
+  
+  // Chifre esquerdo
+  ctx.beginPath();
+  ctx.moveTo(-5, -this.radius);
+  ctx.bezierCurveTo(
+    -10, -this.radius - 15,
+    -15, -this.radius - 10,
+    -8, -this.radius - 20
+  );
+  ctx.stroke();
+  
+  // Chifre direito
+  ctx.beginPath();
+  ctx.moveTo(5, -this.radius);
+  ctx.bezierCurveTo(
+    10, -this.radius - 15,
+    15, -this.radius - 10,
+    8, -this.radius - 20
+  );
+  ctx.stroke();
+  
+  // Sorriso maligno
+  ctx.strokeStyle = "#000";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(0, 5, 5, 0.2, Math.PI - 0.2);
+  ctx.stroke();
+  
+  // Rabo pontudo
+  ctx.beginPath();
+  ctx.moveTo(0, this.radius);
+  ctx.lineTo(5, this.radius + 10);
+  ctx.lineTo(0, this.radius + 15);
+  ctx.lineTo(-5, this.radius + 10);
+  ctx.closePath();
+  ctx.fillStyle = hellMode ? "#ffeb3b" : "#fff176";
+  ctx.fill();
+  ctx.stroke();
+  
+  ctx.restore();
+  break;
             
-            // Mouth
-            ctx.strokeStyle = "black";
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.arc(0, 3, 5, 0.1, Math.PI - 0.1);
-            ctx.stroke();
+          case 4: // Ogre detalhado
+  ctx.save();
+  
+  // Corpo principal
+  const ogreGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, this.radius);
+  ogreGradient.addColorStop(0, hellMode ? "#388e3c" : "#4caf50");
+  ogreGradient.addColorStop(1, hellMode ? "#1b5e20" : "#2e7d32");
+  
+  ctx.fillStyle = ogreGradient;
+  ctx.beginPath();
+  ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // Barriga proeminente
+  ctx.fillStyle = hellMode ? "#8bc34a" : "#aed581";
+  ctx.beginPath();
+  ctx.arc(0, 5, this.radius - 8, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // Cicatrizes e detalhes
+  ctx.strokeStyle = hellMode ? "#33691e" : "#1b5e20";
+  ctx.lineWidth = 2;
+  
+  // Cicatriz no olho
+  ctx.beginPath();
+  ctx.moveTo(-15, -5);
+  ctx.lineTo(-5, -10);
+  ctx.stroke();
+  
+  // Detalhes musculares
+  ctx.beginPath();
+  ctx.arc(-10, 0, 8, Math.PI * 0.2, Math.PI * 0.8);
+  ctx.stroke();
+  
+  ctx.beginPath();
+  ctx.arc(10, 0, 8, Math.PI * 1.2, Math.PI * 1.8);
+  ctx.stroke();
+  
+  // Olhos pequenos e furiosos
+  ctx.fillStyle = "#000";
+  ctx.beginPath();
+  ctx.arc(-8, -8, 3, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(8, -8, 3, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // Sobrancelhas grossas
+  ctx.fillStyle = hellMode ? "#1b5e20" : "#33691e";
+  ctx.beginPath();
+  ctx.rect(-12, -12, 8, 3);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.rect(4, -12, 8, 3);
+  ctx.fill();
+  
+  // Nariz largo
+  ctx.fillStyle = hellMode ? "#7cb342" : "#9ccc65";
+  ctx.beginPath();
+  ctx.arc(0, -2, 6, 0, Math.PI * 2);
+  ctx.fill();
+  
+  ctx.fillStyle = "#000";
+  ctx.beginPath();
+  ctx.arc(-2, -2, 1.5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(2, -2, 1.5, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // Boca aberta com dentes
+  ctx.fillStyle = "#000";
+  ctx.beginPath();
+  ctx.arc(0, 8, 10, 0, Math.PI);
+  ctx.fill();
+  
+  ctx.fillStyle = "#fff";
+  for (let i = -3; i <= 3; i++) {
+    if (i === 0) continue;
+    ctx.beginPath();
+    ctx.rect(i * 3 - 1, 5, 2, 4);
+    ctx.fill();
+  }
+  
+  // Clava com cravos
+  ctx.fillStyle = hellMode ? "#5d4037" : "#6d4c41";
+  ctx.beginPath();
+  ctx.roundRect(this.radius - 5, -20, 20, 40, 5);
+  ctx.fill();
+  
+  ctx.fillStyle = hellMode ? "#9e9e9e" : "#bdbdbd";
+  for (let i = -15; i < 15; i += 5) {
+    ctx.beginPath();
+    ctx.arc(this.radius + 15, i, 3, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  
+  // Aura de terra (animação)
+  const earthAura = Math.sin(this.animationTimer * 0.05) * 3 + 8;
+  ctx.beginPath();
+  ctx.arc(0, 0, this.radius + earthAura, 0, Math.PI * 2);
+  const earthGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, this.radius + earthAura);
+  earthGradient.addColorStop(0, 'rgba(121, 85, 72, 0.4)');
+  earthGradient.addColorStop(1, 'rgba(121, 85, 72, 0)');
+  ctx.fillStyle = earthGradient;
+  ctx.fill();
+  
+  ctx.restore();
+  break;
             
-            // Spikes
-            ctx.strokeStyle = hellMode ? "#ff5555" : "#555555";
-            ctx.lineWidth = 2;
-            for (let i = 0; i < 8; i++) {
-              const angle = (i / 8) * Math.PI * 2;
-              ctx.beginPath();
-              ctx.moveTo(
-                Math.cos(angle) * this.radius,
-                Math.sin(angle) * this.radius
-              );
-              ctx.lineTo(
-                Math.cos(angle) * (this.radius + 5),
-                Math.sin(angle) * (this.radius + 5)
-              );
-              ctx.stroke();
-            }
-            break;
+          case 5: // Mago detalhado
+  ctx.save();
+  
+  // Corpo principal (túnica)
+  const robeGradient = ctx.createLinearGradient(-this.radius, -this.radius, this.radius, this.radius);
+  robeGradient.addColorStop(0, hellMode ? "#6a1b9a" : "#7b1fa2");
+  robeGradient.addColorStop(1, hellMode ? "#4a148c" : "#4a148c");
+  
+  ctx.fillStyle = robeGradient;
+  ctx.beginPath();
+  ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // Capuz
+  ctx.fillStyle = hellMode ? "#4a148c" : "#5e35b1";
+  ctx.beginPath();
+  ctx.arc(0, -this.radius * 0.3, this.radius * 0.8, Math.PI, Math.PI * 2);
+  ctx.fill();
+  
+  // Detalhes da túnica
+  ctx.strokeStyle = hellMode ? "#ea80fc" : "#e1bee7";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(0, -this.radius);
+  ctx.lineTo(0, this.radius);
+  ctx.stroke();
+  
+  ctx.beginPath();
+  ctx.moveTo(-this.radius * 0.5, -this.radius * 0.2);
+  ctx.lineTo(this.radius * 0.5, -this.radius * 0.2);
+  ctx.stroke();
+  
+  // Olhos brilhantes sob o capuz
+  const glowIntensity = Math.sin(this.animationTimer * 0.2) * 0.5 + 0.5;
+  ctx.fillStyle = `rgba(255, 64, 129, ${glowIntensity})`;
+  ctx.beginPath();
+  ctx.arc(-5, -5, 3, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(5, -5, 3, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // Mãos com energia mágica
+  ctx.fillStyle = `rgba(255, 64, 129, ${glowIntensity * 0.7})`;
+  ctx.beginPath();
+  ctx.arc(-this.radius + 5, 0, 6, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(this.radius - 5, 0, 6, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // Cajado flutuante
+  ctx.save();
+  const staffFloat = Math.sin(this.animationTimer * 0.1) * 3;
+  ctx.translate(0, staffFloat);
+  
+  ctx.strokeStyle = hellMode ? "#f5f5f5" : "#e0e0e0";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(0, -this.radius - 10);
+  ctx.lineTo(0, this.radius + 10);
+  ctx.stroke();
+  
+  // Cristal no topo do cajado (com brilho pulsante)
+  ctx.fillStyle = `rgba(255, 64, 129, ${glowIntensity})`;
+  ctx.beginPath();
+  ctx.arc(0, -this.radius - 15, 5, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // Aura do cristal
+  ctx.beginPath();
+  ctx.arc(0, -this.radius - 15, 10, 0, Math.PI * 2);
+  const crystalGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, 10);
+  crystalGradient.addColorStop(0, `rgba(255, 64, 129, ${glowIntensity * 0.5})`);
+  crystalGradient.addColorStop(1, 'rgba(255, 64, 129, 0)');
+  ctx.fillStyle = crystalGradient;
+  ctx.fill();
+  
+  ctx.restore();
+  
+  // Orbe flutuante de energia (gira ao redor do mago)
+  const orbAngle = this.animationTimer * 0.05;
+  const orbX = Math.cos(orbAngle) * (this.radius + 15);
+  const orbY = Math.sin(orbAngle) * (this.radius + 15);
+  
+  ctx.fillStyle = `rgba(255, 64, 129, ${glowIntensity})`;
+  ctx.beginPath();
+  ctx.arc(orbX, orbY, 5, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // Rastro da órbita
+  ctx.strokeStyle = `rgba(255, 64, 129, 0.3)`;
+  ctx.setLineDash([5, 5]);
+  ctx.beginPath();
+  ctx.arc(0, 0, this.radius + 15, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  
+  // Runas flutuantes
+  for (let i = 0; i < 4; i++) {
+    const runeAngle = orbAngle + (i * Math.PI / 2);
+    const runeX = Math.cos(runeAngle) * (this.radius + 8);
+    const runeY = Math.sin(runeAngle) * (this.radius + 8);
+    
+    ctx.fillStyle = `rgba(255, 255, 255, ${0.5 + Math.sin(this.animationTimer * 0.2 + i) * 0.5})`;
+    ctx.fillText("✸", runeX - 5, runeY + 5);
+  }
+  
+  ctx.restore();
+  break;
             
-          case 2: // Tank enemy - Orc
-            ctx.beginPath();
-            ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
-            ctx.fill();
+          case 6: // Rei Violeta detalhado
+  ctx.save();
+  ctx.rotate(Math.atan2(player.y - this.y, player.x - this.x));
+  
+  // Coroa real elaborada
+  ctx.fillStyle = hellMode ? "#8e24aa" : "#9c27b0";
+  ctx.beginPath();
+  
+  // Base da coroa
+  ctx.moveTo(-25, -this.radius - 5);
+  ctx.lineTo(25, -this.radius - 5);
+  ctx.lineTo(20, -this.radius - 20);
+  ctx.lineTo(0, -this.radius - 30);
+  ctx.lineTo(-20, -this.radius - 20);
+  ctx.closePath();
+  ctx.fill();
+  
+  // Detalhes da coroa
+  ctx.strokeStyle = hellMode ? "#ea80fc" : "#e1bee7";
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  
+  // Joias na coroa
+  const jewelColors = ["#ff4081", "#00b0ff", "#76ff03"];
+  for (let i = -1; i <= 1; i++) {
+    ctx.fillStyle = jewelColors[i + 1];
+    ctx.beginPath();
+    ctx.arc(i * 12, -this.radius - 15, 4, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Brilho das joias
+    ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
+    ctx.beginPath();
+    ctx.arc(i * 12 - 1, -this.radius - 16, 1, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  
+  // Corpo real
+  const kingGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, this.radius);
+  kingGradient.addColorStop(0, hellMode ? "#7b1fa2" : "#8e24aa");
+  kingGradient.addColorStop(1, hellMode ? "#4a148c" : "#6a1b9a");
+  
+  ctx.fillStyle = kingGradient;
+  ctx.beginPath();
+  ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // Manto real
+  ctx.fillStyle = hellMode ? "#4a148c" : "#5e35b1";
+  ctx.beginPath();
+  ctx.moveTo(-this.radius, this.radius * 0.5);
+  ctx.bezierCurveTo(
+    -this.radius * 1.5, this.radius * 1.5,
+    this.radius * 1.5, this.radius * 1.5,
+    this.radius, this.radius * 0.5
+  );
+  ctx.lineTo(this.radius, this.radius);
+  ctx.lineTo(-this.radius, this.radius);
+  ctx.closePath();
+  ctx.fill();
+  
+  // Padrão no manto
+  ctx.fillStyle = hellMode ? "#ea80fc" : "#e1bee7";
+  for (let i = -2; i <= 2; i++) {
+    ctx.beginPath();
+    ctx.arc(i * 10, this.radius * 0.8, 3, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  
+  // Olhos reais
+  ctx.fillStyle = "#fff";
+  ctx.beginPath();
+  ctx.arc(15, -10, 8, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(15, 10, 8, 0, Math.PI * 2);
+  ctx.fill();
+  
+  ctx.fillStyle = "#000";
+  ctx.beginPath();
+  ctx.arc(18, -10, 4, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(18, 10, 4, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // Brilho nos olhos
+  const kingGlow = Math.sin(this.animationTimer * 0.1) * 0.5 + 0.5;
+  ctx.fillStyle = `rgba(255, 64, 129, ${kingGlow})`;
+  ctx.beginPath();
+  ctx.arc(19, -11, 2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(19, 9, 2, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // Boca real
+  ctx.strokeStyle = "#000";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(10, 0, 5, 0, Math.PI);
+  ctx.stroke();
+  
+  // Cetro real
+  ctx.strokeStyle = "#ffd600";
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.moveTo(-this.radius, -this.radius * 0.5);
+  ctx.lineTo(-this.radius - 30, -this.radius - 20);
+  ctx.stroke();
+  
+  ctx.fillStyle = "#ffd600";
+  ctx.beginPath();
+  ctx.arc(-this.radius - 30, -this.radius - 20, 8, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // Joia no cetro
+  ctx.fillStyle = "#00b0ff";
+  ctx.beginPath();
+  ctx.arc(-this.radius - 30, -this.radius - 20, 5, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // Aura real pulsante
+  const auraSize = this.radius + 15 + Math.sin(this.animationTimer * 0.1) * 5;
+  ctx.beginPath();
+  ctx.arc(0, 0, auraSize, 0, Math.PI * 2);
+  const kingAuraGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, auraSize);
+  kingAuraGradient.addColorStop(0, 'rgba(170, 0, 170, 0.5)');
+  kingAuraGradient.addColorStop(1, 'rgba(170, 0, 170, 0)');
+  ctx.fillStyle = kingAuraGradient;
+  ctx.fill();
+  
+  // Partículas mágicas ao redor
+  for (let i = 0; i < 12; i++) {
+    const particleAngle = (i / 12) * Math.PI * 2 + this.animationTimer * 0.01;
+    const particleDist = this.radius + 25 + Math.sin(this.animationTimer * 0.05 + i) * 5;
+    const particleX = Math.cos(particleAngle) * particleDist;
+    const particleY = Math.sin(particleAngle) * particleDist;
+    const particleSize = 2 + Math.sin(this.animationTimer * 0.1 + i) * 1;
+    
+    ctx.fillStyle = `rgba(255, 64, 129, ${0.5 + Math.sin(this.animationTimer * 0.1 + i) * 0.5})`;
+    ctx.beginPath();
+    ctx.arc(particleX, particleY, particleSize, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  
+  ctx.restore();
+  break;
             
-            // Armor details
-            ctx.fillStyle = hellMode ? "#aa0000" : "#333333";
-            ctx.fillRect(-this.radius + 2, -this.radius + 5, this.radius * 2 - 4, 10);
-            ctx.fillRect(-this.radius + 2, this.radius - 15, this.radius * 2 - 4, 10);
+          case 7: // Rei Dourado detalhado
+  ctx.save();
+  ctx.rotate(Math.atan2(player.y - this.y, player.x - this.x));
+  
+  // Coroa dourada elaborada
+  const crownGradient = ctx.createLinearGradient(0, -this.radius - 30, 0, -this.radius - 5);
+  crownGradient.addColorStop(0, "#ffd600");
+  crownGradient.addColorStop(1, "#ffab00");
+  
+  ctx.fillStyle = crownGradient;
+  
+  // Base da coroa
+  ctx.beginPath();
+  ctx.moveTo(-25, -this.radius - 5);
+  ctx.lineTo(25, -this.radius - 5);
+  ctx.lineTo(20, -this.radius - 20);
+  ctx.lineTo(0, -this.radius - 35);
+  ctx.lineTo(-20, -this.radius - 20);
+  ctx.closePath();
+  ctx.fill();
+  
+  // Detalhes da coroa
+  ctx.strokeStyle = "#ff6d00";
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  
+  // Joias na coroa (rubi, esmeralda, safira)
+  const royalJewelColors = ["#d50000", "#00c853", "#2962ff"];
+  for (let i = -1; i <= 1; i++) {
+    ctx.fillStyle = royalJewelColors[i + 1];
+    ctx.beginPath();
+    ctx.arc(i * 12, -this.radius - 15, 5, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Brilho das joias
+    ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
+    ctx.beginPath();
+    ctx.arc(i * 12 - 1, -this.radius - 16, 1.5, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  
+  // Corpo dourado
+  const goldGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, this.radius);
+  goldGradient.addColorStop(0, "#ffd600");
+  goldGradient.addColorStop(1, "#ffab00");
+  
+  ctx.fillStyle = goldGradient;
+  ctx.beginPath();
+  ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // Detalhes de luz e sombra
+  ctx.strokeStyle = "#ff6d00";
+  ctx.lineWidth = 2;
+  
+  // Divisões do torso
+  ctx.beginPath();
+  ctx.arc(0, 0, this.radius - 5, Math.PI * 0.2, Math.PI * 0.8);
+  ctx.stroke();
+  
+  ctx.beginPath();
+  ctx.arc(0, 0, this.radius - 5, Math.PI * 1.2, Math.PI * 1.8);
+  ctx.stroke();
+  
+  // Olhos reais
+  ctx.fillStyle = "#fff";
+  ctx.beginPath();
+  ctx.arc(15, -10, 8, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(15, 10, 8, 0, Math.PI * 2);
+  ctx.fill();
+  
+  ctx.fillStyle = "#000";
+  ctx.beginPath();
+  ctx.arc(18, -10, 4, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(18, 10, 4, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // Brilho dourado nos olhos
+  const goldGlow = Math.sin(this.animationTimer * 0.1) * 0.5 + 0.5;
+  ctx.fillStyle = `rgba(255, 215, 0, ${goldGlow})`;
+  ctx.beginPath();
+  ctx.arc(19, -11, 2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(19, 9, 2, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // Boca real
+  ctx.strokeStyle = "#000";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(10, 0, 5, 0, Math.PI);
+  ctx.stroke();
+  
+  // Manto real dourado
+  ctx.fillStyle = "rgba(255, 215, 0, 0.7)";
+  ctx.beginPath();
+  ctx.moveTo(-this.radius, this.radius * 0.5);
+  ctx.bezierCurveTo(
+    -this.radius * 1.5, this.radius * 1.5,
+    this.radius * 1.5, this.radius * 1.5,
+    this.radius, this.radius * 0.5
+  );
+  ctx.lineTo(this.radius, this.radius);
+  ctx.lineTo(-this.radius, this.radius);
+  ctx.closePath();
+  ctx.fill();
+  
+  // Padrão solar no manto
+  ctx.strokeStyle = "#ff6d00";
+  ctx.lineWidth = 2;
+  for (let i = 0; i < 8; i++) {
+    const angle = (i / 8) * Math.PI * 2;
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(
+      Math.cos(angle) * this.radius,
+      Math.sin(angle) * this.radius
+    );
+    ctx.stroke();
+  }
+  
+  // Cetro solar
+  ctx.strokeStyle = "#ffd600";
+  ctx.lineWidth = 5;
+  ctx.beginPath();
+  ctx.moveTo(-this.radius, -this.radius * 0.5);
+  ctx.lineTo(-this.radius - 40, -this.radius - 25);
+  ctx.stroke();
+  
+  // Sol no cetro
+  ctx.fillStyle = "#ff6d00";
+  ctx.beginPath();
+  ctx.arc(-this.radius - 40, -this.radius - 25, 10, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // Raios do sol
+  for (let i = 0; i < 8; i++) {
+    const rayAngle = (i / 8) * Math.PI * 2;
+    ctx.beginPath();
+    ctx.moveTo(
+      -this.radius - 40 + Math.cos(rayAngle) * 10,
+      -this.radius - 25 + Math.sin(rayAngle) * 10
+    );
+    ctx.lineTo(
+      -this.radius - 40 + Math.cos(rayAngle) * 20,
+      -this.radius - 25 + Math.sin(rayAngle) * 20
+    );
+    ctx.strokeStyle = "#ffd600";
+    ctx.lineWidth = 3;
+    ctx.stroke();
+  }
+  
+  // Aura solar pulsante
+  const sunAuraSize = this.radius + 20 + Math.sin(this.animationTimer * 0.1) * 8;
+  ctx.beginPath();
+  ctx.arc(0, 0, sunAuraSize, 0, Math.PI * 2);
+  const sunAuraGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, sunAuraSize);
+  sunAuraGradient.addColorStop(0, 'rgba(255, 215, 0, 0.6)');
+  sunAuraGradient.addColorStop(1, 'rgba(255, 215, 0, 0)');
+  ctx.fillStyle = sunAuraGradient;
+  ctx.fill();
+  
+  // Partículas de luz dourada
+  for (let i = 0; i < 16; i++) {
+    const particleAngle = (i / 16) * Math.PI * 2 + this.animationTimer * 0.02;
+    const particleDist = this.radius + 30 + Math.sin(this.animationTimer * 0.05 + i) * 8;
+    const particleX = Math.cos(particleAngle) * particleDist;
+    const particleY = Math.sin(particleAngle) * particleDist;
+    const particleSize = 3 + Math.sin(this.animationTimer * 0.1 + i) * 2;
+    
+    ctx.fillStyle = `rgba(255, 215, 0, ${0.6 + Math.sin(this.animationTimer * 0.1 + i) * 0.4})`;
+    ctx.beginPath();
+    ctx.arc(particleX, particleY, particleSize, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  
+  ctx.restore();
+  break;
             
-            // Eyes
-            ctx.fillStyle = "yellow";
-            ctx.beginPath();
-            ctx.arc(-7, -5, 4, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.beginPath();
-            ctx.arc(7, -5, 4, 0, Math.PI * 2);
-            ctx.fill();
+          case 8: // Imperador do Mundo detalhado
+  ctx.save();
+  ctx.rotate(Math.atan2(player.y - this.y, player.x - this.x));
+  
+  // Armadura imperial
+  const emperorGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, this.radius);
+  if (this.phase === 1) {
+    emperorGradient.addColorStop(0, "#d50000");
+    emperorGradient.addColorStop(1, "#b71c1c");
+  } else {
+    // Fase 2 - Armadura enfurecida
+    emperorGradient.addColorStop(0, "#ff5131");
+    emperorGradient.addColorStop(1, "#c62828");
+  }
+  
+  ctx.fillStyle = emperorGradient;
+  ctx.beginPath();
+  ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // Detalhes da armadura
+  ctx.strokeStyle = this.phase === 1 ? "#ff6d00" : "#ffab00";
+  ctx.lineWidth = 3;
+  
+  // Divisões da armadura
+  ctx.beginPath();
+  ctx.arc(0, 0, this.radius - 10, Math.PI * 0.2, Math.PI * 0.8);
+  ctx.stroke();
+  
+  ctx.beginPath();
+  ctx.arc(0, 0, this.radius - 10, Math.PI * 1.2, Math.PI * 1.8);
+  ctx.stroke();
+  
+  // Elmo imperial
+  ctx.fillStyle = this.phase === 1 ? "#b71c1c" : "#d50000";
+  ctx.beginPath();
+  ctx.arc(0, -this.radius * 0.2, this.radius * 0.9, Math.PI, Math.PI * 2);
+  ctx.fill();
+  
+  // Crista do elmo
+  ctx.fillStyle = this.phase === 1 ? "#ff6d00" : "#ffab00";
+  ctx.beginPath();
+  ctx.moveTo(-this.radius * 0.7, -this.radius * 0.2);
+  ctx.lineTo(0, -this.radius - 15);
+  ctx.lineTo(this.radius * 0.7, -this.radius * 0.2);
+  ctx.closePath();
+  ctx.fill();
+  
+  // Olhos sob o elmo
+  const emperorGlow = Math.sin(this.animationTimer * 0.1) * 0.5 + 0.5;
+  ctx.fillStyle = `rgba(255, 255, 255, ${emperorGlow})`;
+  ctx.beginPath();
+  ctx.arc(-10, -5, 5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(10, -5, 5, 0, Math.PI * 2);
+  ctx.fill();
+  
+  ctx.fillStyle = this.phase === 1 ? "#ff3d00" : "#ff9100";
+  ctx.beginPath();
+  ctx.arc(-10, -5, 3, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(10, -5, 3, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // Brazão imperial no peito
+  ctx.fillStyle = "#ffd600";
+  ctx.beginPath();
+  ctx.moveTo(0, 5);
+  ctx.lineTo(-10, 15);
+  ctx.lineTo(0, 25);
+  ctx.lineTo(10, 15);
+  ctx.closePath();
+  ctx.fill();
+  
+  ctx.strokeStyle = "#000";
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  
+  // Capa imperial
+  ctx.fillStyle = this.phase === 1 ? "rgba(139, 0, 0, 0.7)" : "rgba(178, 34, 34, 0.7)";
+  ctx.beginPath();
+  ctx.moveTo(-this.radius, this.radius * 0.3);
+  ctx.bezierCurveTo(
+    -this.radius * 2, this.radius * 1.5,
+    this.radius * 2, this.radius * 1.5,
+    this.radius, this.radius * 0.3
+  );
+  ctx.lineTo(this.radius, this.radius);
+  ctx.lineTo(-this.radius, this.radius);
+  ctx.closePath();
+  ctx.fill();
+  
+  // Espada imperial
+  ctx.fillStyle = "#9e9e9e";
+  ctx.fillRect(this.radius - 5, -30, 10, 60);
+  
+  ctx.fillStyle = "#ffd600";
+  ctx.beginPath();
+  ctx.moveTo(this.radius, -35);
+  ctx.lineTo(this.radius + 15, -30);
+  ctx.lineTo(this.radius, -25);
+  ctx.closePath();
+  ctx.fill();
+  
+  // Empunhadura da espada
+  ctx.fillStyle = "#5d4037";
+  ctx.fillRect(this.radius - 7, 0, 14, 15);
+  
+  // Jóias na empunhadura
+  ctx.fillStyle = "#d50000";
+  ctx.beginPath();
+  ctx.arc(this.radius, 7, 3, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // Aura imperial
+  const emperorAuraSize = this.radius + 25 + Math.sin(this.animationTimer * 0.1) * 10;
+  ctx.beginPath();
+  ctx.arc(0, 0, emperorAuraSize, 0, Math.PI * 2);
+  const emperorAuraGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, emperorAuraSize);
+  
+  if (this.phase === 1) {
+    emperorAuraGradient.addColorStop(0, 'rgba(255, 0, 0, 0.7)');
+    emperorAuraGradient.addColorStop(1, 'rgba(255, 0, 0, 0)');
+  } else {
+    emperorAuraGradient.addColorStop(0, 'rgba(255, 110, 0, 0.8)');
+    emperorAuraGradient.addColorStop(1, 'rgba(255, 110, 0, 0)');
+  }
+  
+  ctx.fillStyle = emperorAuraGradient;
+  ctx.fill();
+  
+  // Partículas de energia
+  for (let i = 0; i < 20; i++) {
+    const particleAngle = (i / 20) * Math.PI * 2 + this.animationTimer * 0.03;
+    const particleDist = this.radius + 35 + Math.sin(this.animationTimer * 0.05 + i) * 10;
+    const particleX = Math.cos(particleAngle) * particleDist;
+    const particleY = Math.sin(particleAngle) * particleDist;
+    const particleSize = 4 + Math.sin(this.animationTimer * 0.1 + i) * 3;
+    
+    if (this.phase === 1) {
+      ctx.fillStyle = `rgba(255, 0, 0, ${0.7 + Math.sin(this.animationTimer * 0.1 + i) * 0.3})`;
+    } else {
+      ctx.fillStyle = `rgba(255, 110, 0, ${0.8 + Math.sin(this.animationTimer * 0.1 + i) * 0.2})`;
+    }
+    
+    ctx.beginPath();
+    ctx.arc(particleX, particleY, particleSize, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  
+  // Efeito especial da fase 2
+  if (this.phase === 2) {
+    // Chamas saindo das costas
+    for (let i = -1; i <= 1; i += 2) {
+      const flameCount = 5;
+      for (let j = 0; j < flameCount; j++) {
+        const flameHeight = 20 + Math.sin(this.animationTimer * 0.2 + j) * 10;
+        const flameWidth = 8 + Math.cos(this.animationTimer * 0.1 + j) * 4;
+        
+        ctx.fillStyle = `rgba(255, ${100 + j * 30}, 0, 0.8)`;
+        ctx.beginPath();
+        ctx.moveTo(i * this.radius * 0.7, this.radius);
+        ctx.bezierCurveTo(
+          i * (this.radius * 0.7 + flameWidth), this.radius + flameHeight * 0.3,
+          i * (this.radius * 0.7 + flameWidth), this.radius + flameHeight * 0.7,
+          i * this.radius * 0.7, this.radius + flameHeight
+        );
+        ctx.bezierCurveTo(
+          i * (this.radius * 0.7 - flameWidth), this.radius + flameHeight * 0.7,
+          i * (this.radius * 0.7 - flameWidth), this.radius + flameHeight * 0.3,
+          i * this.radius * 0.7, this.radius
+        );
+        ctx.fill();
+      }
+    }
+  }
+  
+  ctx.restore();
+  break;
             
-            ctx.fillStyle = "black";
-            ctx.beginPath();
-            ctx.arc(-7, -5, 2, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.beginPath();
-            ctx.arc(7, -5, 2, 0, Math.PI * 2);
-            ctx.fill();
-            
-            // Tusks
-            ctx.strokeStyle = "white";
-            ctx.lineWidth = 3;
-            ctx.beginPath();
-            ctx.moveTo(-5, 5);
-            ctx.lineTo(-10, 10);
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.moveTo(5, 5);
-            ctx.lineTo(10, 10);
-            ctx.stroke();
-            break;
-            
-          case 3: // Fast enemy - Imp
-            ctx.beginPath();
-            ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
-            ctx.fill();
-            
-            // Wings
-            ctx.fillStyle = hellMode ? "rgba(255, 200, 0, 0.6)" : "rgba(255, 255, 255, 0.6)";
-            ctx.beginPath();
-            ctx.ellipse(-15, -10, 10, 15, -Math.PI/4, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.beginPath();
-            ctx.ellipse(15, -10, 10, 15, Math.PI/4, 0, Math.PI * 2);
-            ctx.fill();
-            
-            // Horns
-            ctx.fillStyle = hellMode ? "#ff5555" : "#555555";
-            ctx.beginPath();
-            ctx.moveTo(-5, -this.radius);
-            ctx.lineTo(-10, -this.radius - 8);
-            ctx.lineTo(-3, -this.radius - 5);
-            ctx.fill();
-            ctx.beginPath();
-            ctx.moveTo(5, -this.radius);
-            ctx.lineTo(10, -this.radius - 8);
-            ctx.lineTo(3, -this.radius - 5);
-            ctx.fill();
-            
-            // Eyes
-            ctx.fillStyle = "white";
-            ctx.beginPath();
-            ctx.arc(-4, -2, 2, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.beginPath();
-            ctx.arc(4, -2, 2, 0, Math.PI * 2);
-            ctx.fill();
-            
-            ctx.fillStyle = "red";
-            ctx.beginPath();
-            ctx.arc(-4, -2, 1, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.beginPath();
-            ctx.arc(4, -2, 1, 0, Math.PI * 2);
-            ctx.fill();
-            break;
-            
-          case 4: // Big enemy - Ogre
-            ctx.beginPath();
-            ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
-            ctx.fill();
-            
-            // Club
-            ctx.fillStyle = "#8B4513";
-            ctx.fillRect(this.radius - 5, -20, 15, 40);
-            
-            // Spikes on club
-            ctx.fillStyle = "#555555";
-            for (let i = -15; i < 15; i += 10) {
-              ctx.beginPath();
-              ctx.moveTo(this.radius + 10, i);
-              ctx.lineTo(this.radius + 20, i + 5);
-              ctx.lineTo(this.radius + 10, i + 10);
-              ctx.fill();
-            }
-            
-            // Belly
-            ctx.fillStyle = hellMode ? "#ff8888" : "#ffaaaa";
-            ctx.beginPath();
-            ctx.arc(0, 5, this.radius - 8, 0, Math.PI * 2);
-            ctx.fill();
-            
-            // Eyes
-            ctx.fillStyle = "white";
-            ctx.beginPath();
-            ctx.arc(-10, -8, 5, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.beginPath();
-            ctx.arc(10, -8, 5, 0, Math.PI * 2);
-            ctx.fill();
-            
-            ctx.fillStyle = "black";
-            ctx.beginPath();
-            ctx.arc(-10, -8, 2, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.beginPath();
-            ctx.arc(10, -8, 2, 0, Math.PI * 2);
-            ctx.fill();
-            
-            // Mouth
-            ctx.strokeStyle = "black";
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.arc(0, 5, 10, 0, Math.PI);
-            ctx.stroke();
-            break;
-            
-          case 5: // Ranged enemy - Mage
-            ctx.beginPath();
-            ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
-            ctx.fill();
-            
-            // Robe details
-            ctx.fillStyle = hellMode ? "#550055" : "#330033";
-            ctx.beginPath();
-            ctx.arc(0, 0, this.radius - 5, 0, Math.PI * 2);
-            ctx.fill();
-            
-            // Staff
-            ctx.strokeStyle = "#8B4513";
-            ctx.lineWidth = 3;
-            ctx.beginPath();
-            ctx.moveTo(0, -this.radius);
-            ctx.lineTo(0, this.radius);
-            ctx.stroke();
-            
-            // Gem on staff
-            ctx.fillStyle = hellMode ? "#ff00ff" : "#aa00aa";
-            ctx.beginPath();
-            ctx.arc(0, -this.radius + 5, 4, 0, Math.PI * 2);
-            ctx.fill();
-            
-            // Eyes
-            ctx.fillStyle = "white";
-            ctx.beginPath();
-            ctx.arc(-5, -5, 3, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.beginPath();
-            ctx.arc(5, -5, 3, 0, Math.PI * 2);
-            ctx.fill();
-            
-            ctx.fillStyle = "cyan";
-            ctx.beginPath();
-            ctx.arc(-5, -5, 1, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.beginPath();
-            ctx.arc(5, -5, 1, 0, Math.PI * 2);
-            ctx.fill();
-            break;
-            
-          case 6: // Rei Violeta
-            const angle = Math.atan2(player.y - this.y, player.x - this.x);
-            ctx.rotate(angle);
-            
-            // Crown
-            ctx.fillStyle = hellMode ? "#ff00ff" : "#aa00aa";
-            for (let i = -1; i <= 1; i++) {
-              ctx.beginPath();
-              ctx.moveTo(i * 15, -this.radius - 10);
-              ctx.lineTo(i * 15 + 7, -this.radius - 20);
-              ctx.lineTo(i * 15 - 7, -this.radius - 20);
-              ctx.fill();
-            }
-            
-            // Jewel in crown
-            ctx.fillStyle = "#00ffff";
-            ctx.beginPath();
-              ctx.arc(0, -this.radius - 15, 5, 0, Math.PI * 2);
-              ctx.fill();
-            
-            // Body
-            ctx.fillStyle = this.isFrozen ? this.frozenColor : this.color;
-            ctx.beginPath();
-            ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
-            ctx.fill();
-            
-            // Royal robe pattern
-            ctx.fillStyle = hellMode ? "#ff88ff" : "#ff00ff";
-            for (let i = 0; i < 8; i++) {
-              const patternAngle = (i / 8) * Math.PI * 2 + this.animationTimer / 20;
-              ctx.beginPath();
-              ctx.arc(
-                Math.cos(patternAngle) * (this.radius - 5),
-                Math.sin(patternAngle) * (this.radius - 5),
-                3, 0, Math.PI * 2
-              );
-              ctx.fill();
-            }
-            
-            // Eyes
-            ctx.fillStyle = "white";
-            ctx.beginPath();
-            ctx.arc(15, -10, 8, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.beginPath();
-            ctx.arc(15, 10, 8, 0, Math.PI * 2);
-            ctx.fill();
-            
-            ctx.fillStyle = "black";
-            ctx.beginPath();
-            ctx.arc(18, -10, 4, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.beginPath();
-            ctx.arc(18, 10, 4, 0, Math.PI * 2);
-            ctx.fill();
-            
-            // Mouth
-            ctx.strokeStyle = "black";
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.arc(10, 0, 5, 0, Math.PI);
-            ctx.stroke();
-            
-            // Aura
-            ctx.beginPath();
-            ctx.arc(0, 0, this.radius + 15, 0, Math.PI * 2);
-            const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, this.radius + 15);
-            gradient.addColorStop(0, 'rgba(170, 0, 170, 0.3)');
-            gradient.addColorStop(1, 'rgba(170, 0, 170, 0)');
-            ctx.fillStyle = gradient;
-            ctx.fill();
-            break;
-            
-          case 7: // Rei Dourado
-            ctx.rotate(Math.atan2(player.y - this.y, player.x - this.x));
-            
-            // Crown with jewels
-            ctx.fillStyle = hellMode ? "#ffff00" : "#ffcc00";
-            for (let i = -1; i <= 1; i++) {
-              ctx.beginPath();
-              ctx.moveTo(i * 15, -this.radius - 10);
-              ctx.lineTo(i * 15 + 7, -this.radius - 20);
-              ctx.lineTo(i * 15 - 7, -this.radius - 20);
-              ctx.fill();
-              
-              // Jewels in crown
-              ctx.fillStyle = i === 0 ? "#ff0000" : "#00ff00";
-              ctx.beginPath();
-              ctx.arc(i * 15, -this.radius - 15, 3, 0, Math.PI * 2);
-              ctx.fill();
-              ctx.fillStyle = hellMode ? "#ffff00" : "#ffcc00";
-            }
-            
-            // Body
-            ctx.fillStyle = this.isFrozen ? this.frozenColor : this.color;
-            ctx.beginPath();
-            ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
-            ctx.fill();
-            
-            // Sun pattern
-            ctx.fillStyle = hellMode ? "#ffaa00" : "#ff9900";
-            for (let i = 0; i < 12; i++) {
-              const rayAngle = (i / 12) * Math.PI * 2 + this.animationTimer / 30;
-              ctx.beginPath();
-              ctx.moveTo(0, 0);
-              ctx.lineTo(
-                Math.cos(rayAngle) * (this.radius + 10),
-                Math.sin(rayAngle) * (this.radius + 10)
-              );
-              ctx.lineWidth = 3;
-              ctx.stroke();
-            }
-            
-            // Eyes
-            ctx.fillStyle = "white";
-            ctx.beginPath();
-            ctx.arc(15, -10, 8, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.beginPath();
-            ctx.arc(15, 10, 8, 0, Math.PI * 2);
-            ctx.fill();
-            
-            ctx.fillStyle = "black";
-            ctx.beginPath();
-            ctx.arc(18, -10, 4, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.beginPath();
-            ctx.arc(18, 10, 4, 0, Math.PI * 2);
-            ctx.fill();
-            
-            // Mouth
-            ctx.strokeStyle = "black";
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.arc(10, 0, 5, 0, Math.PI);
-            ctx.stroke();
-            
-            // Golden aura
-            ctx.beginPath();
-            ctx.arc(0, 0, this.radius + 15, 0, Math.PI * 2);
-            const goldGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, this.radius + 15);
-            goldGradient.addColorStop(0, 'rgba(255, 204, 0, 0.4)');
-            goldGradient.addColorStop(1, 'rgba(255, 204, 0, 0)');
-            ctx.fillStyle = goldGradient;
-            ctx.fill();
-            break;
-            
-          case 8: // Imperador do Mundo
-            ctx.rotate(Math.atan2(player.y - this.y, player.x - this.x));
-            
-            // Imperial crown
-            ctx.fillStyle = hellMode ? "#ff3300" : "#cc2200";
-            ctx.beginPath();
-            ctx.moveTo(-20, -this.radius - 5);
-            ctx.lineTo(20, -this.radius - 5);
-            ctx.lineTo(20, -this.radius - 15);
-            ctx.lineTo(0, -this.radius - 25);
-            ctx.lineTo(-20, -this.radius - 15);
-            ctx.closePath();
-            ctx.fill();
-            
-            // Jewels in crown
-            ctx.fillStyle = "#00ccff";
-            ctx.beginPath();
-            ctx.arc(0, -this.radius - 20, 4, 0, Math.PI * 2);
-            ctx.fill();
-            
-            // Body
-            ctx.fillStyle = this.isFrozen ? this.frozenColor : this.color;
-            ctx.beginPath();
-            ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
-            ctx.fill();
-            
-            // Imperial insignia
-            ctx.fillStyle = hellMode ? "#ff5500" : "#ff0000";
-            ctx.beginPath();
-            ctx.moveTo(0, -this.radius + 10);
-            ctx.lineTo(-10, 0);
-            ctx.lineTo(0, this.radius - 10);
-            ctx.lineTo(10, 0);
-            ctx.closePath();
-            ctx.fill();
-            
-            // Eyes
-            ctx.fillStyle = "white";
-            ctx.beginPath();
-            ctx.arc(15, -10, 8, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.beginPath();
-            ctx.arc(15, 10, 8, 0, Math.PI * 2);
-            ctx.fill();
-            
-            ctx.fillStyle = "black";
-            ctx.beginPath();
-            ctx.arc(18, -10, 4, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.beginPath();
-            ctx.arc(18, 10, 4, 0, Math.PI * 2);
-            ctx.fill();
-            
-            // Mouth
-            ctx.strokeStyle = "black";
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.arc(10, 0, 5, 0, Math.PI);
-            ctx.stroke();
-            
-            // Phase 2 aura
-            if (this.phase === 2) {
-              ctx.beginPath();
-              ctx.arc(0, 0, this.radius + 20, 0, Math.PI * 2);
-              const phaseGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, this.radius + 20);
-              phaseGradient.addColorStop(0, 'rgba(255, 0, 0, 0.5)');
-              phaseGradient.addColorStop(1, 'rgba(255, 0, 0, 0)');
-              ctx.fillStyle = phaseGradient;
-              ctx.fill();
-            }
-            break;
-            
-          case 9: // Devorador de Almas
-            // Dark aura
+         case 9: // Devorador de Almas
+     // Dark aura
             ctx.beginPath();
             ctx.arc(0, 0, this.radius + 25, 0, Math.PI * 2);
-            const auraGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, this.radius + 25);
-            auraGradient.addColorStop(0, 'rgba(255, 0, 0, 0.5)');
-            auraGradient.addColorStop(0.7, 'rgba(150, 0, 0, 0.3)');
-            auraGradient.addColorStop(1, 'rgba(50, 0, 0, 0)');
-            ctx.fillStyle = auraGradient;
+            const demonAuraGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, this.radius + 25);
+            demonAuraGradient.addColorStop(0, 'rgba(255, 0, 0, 0.5)');
+            demonAuraGradient.addColorStop(0.7, 'rgba(150, 0, 0, 0.3)');
+            demonAuraGradient.addColorStop(1, 'rgba(50, 0, 0, 0)');
+            ctx.fillStyle = demonAuraGradient;
             ctx.fill();
             
             // Body
@@ -2080,6 +2706,7 @@
               ctx.fill();
             }
             break;
+  break;
             
           default:
             ctx.beginPath();
