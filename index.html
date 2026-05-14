@@ -341,17 +341,17 @@
       <div class="power-option" onclick="selectPower('freeze')">
         <div class="character-icon">❄️</div>
         <div>CONGELAMENTO</div>
-        <div class="power-description">Deixa seus inimigos com um resfriado, todos eles ficam muito lentos por alguns segundos!</div>
+        <div class="power-description">Deixa seus inimigos com um resfriado, todos eles ficam muito lentos e tomam dano contínuo por alguns segundos!</div>
       </div>
       <div class="power-option" onclick="selectPower('lightning')">
        <div class="character-icon">⚡</div>
         <div>RELÂMPAGO</div>
         <div class="power-description">Eletrocuta até 12 inimigos próximos, deixando-os paralisados por alguns instantes!</div>
       </div>
-      <div class="power-option" onclick="selectPower('shield')">
-        <div class="character-icon">🔰</div>
-        <div>ESCUDO CÓSMICO</div>
-        <div class="power-description">Cria um escudo de invencibilidade temporário!</div>
+      <div class="power-option" onclick="selectPower('fury')">
+        <div class="character-icon">🔥</div>
+        <div>FÚRIA LENDÁRIA</div>
+        <div class="power-description">Transforme sua dor em raiva, e libere todo seu poder, ficando mais rápido e mais resistente!</div>
       </div>
       <div class="power-option" onclick="selectPower('meteor')">
         <div class="character-icon">☄️</div>
@@ -501,7 +501,6 @@
       waveDisplay.classList.remove('hell-wave');
     }
 
-
     class Player {
       constructor() {
         this.x = canvas.width / 2;
@@ -526,12 +525,16 @@
         this.rapidFireTimer = 0;
         this.rapidFireActive = false;
         this.burnTimer = 0;
+        this.furyActive = false;
+        this.furyTimer = 0;
+        this.furyDamageMultiplier = 1;
+        this.furyDamageReduction = 1;
         this.specialCooldowns = {
           explosive: 0,
           multi: 0,
           freeze: 0,
           lightning: 0,
-          shield: 0,
+          fury: 0,
           meteor: 0
         };
         this.bowAngle = 0;
@@ -566,6 +569,14 @@
           }
         }
 
+        if (this.furyActive) {
+          this.furyTimer--;
+          if (this.furyTimer <= 0) {
+            this.furyActive = false;
+            this.speed = this.originalSpeed;
+          }
+        }
+
         if (keys["KeyQ"] && this.dashCooldown <= 0 && !this.dashing) {
           this.dashing = true;
           this.dashTimer = 15;
@@ -573,7 +584,6 @@
           this.invulnerable = true;
           this.speed *= 7;
           
-          // Efeito de dash
           for (let i = 0; i < 20; i++) {
             this.particles.push({
               x: this.x,
@@ -592,21 +602,23 @@
           if (this.dashTimer <= 0) {
             this.dashing = false;
             this.invulnerable = false;
-            this.speed = this.originalSpeed;
+            this.speed = this.furyActive ? this.originalSpeed * 1.4 : this.originalSpeed;
           }
         }
 
         if (this.dashCooldown > 0) this.dashCooldown--;
 
-        if (keys["KeyW"]) this.y -= this.speed;
-        if (keys["KeyS"]) this.y += this.speed;
-        if (keys["KeyA"]) this.x -= this.speed;
-        if (keys["KeyD"]) this.x += this.speed;
+        let currentSpeed = this.furyActive ? this.speed * 1.4 : this.speed;
+        
+        if (keys["KeyW"]) this.y -= currentSpeed;
+        if (keys["KeyS"]) this.y += currentSpeed;
+        if (keys["KeyA"]) this.x -= currentSpeed;
+        if (keys["KeyD"]) this.x += currentSpeed;
         
         this.x = Math.max(this.radius, Math.min(canvas.width - this.radius, this.x));
         this.y = Math.max(this.radius, Math.min(canvas.height - this.radius, this.y));
 
-        const shootSpeed = this.rapidFireActive ? 6 : 10;
+        const shootSpeed = this.rapidFireActive ? 6 : this.furyActive ? 5 : 10;
         if (mouse.clicked && this.shootCooldown <= 0) {
           const angle = Math.atan2(mouse.y - this.y, mouse.x - this.x);
           arrows.push(new Arrow(this.x, this.y, angle));
@@ -616,7 +628,6 @@
           this.combo++;
           this.comboTimer = 20;
           
-          // Efeito de disparo
           for (let i = 0; i < 5; i++) {
             this.particles.push({
               x: this.x + Math.cos(angle) * 30,
@@ -632,7 +643,6 @@
 
         if (this.shootCooldown > 0) this.shootCooldown--;
         
-        // Update all special cooldowns
         for (const key in this.specialCooldowns) {
           if (this.specialCooldowns[key] > 0) {
             this.specialCooldowns[key]--;
@@ -643,13 +653,12 @@
        
         if (keys["KeyE"] && this.specialCooldowns[selectedSpecial] <= 0) {
           useSpecial(this);
-          // Set cooldown based on power type
           switch(selectedSpecial) {
             case 'explosive': this.specialCooldowns.explosive = 600; break;
             case 'multi': this.specialCooldowns.multi = 420; break;
             case 'freeze': this.specialCooldowns.freeze = 780; break;
             case 'lightning': this.specialCooldowns.lightning = 660; break;
-            case 'shield': this.specialCooldowns.shield = 900; break;
+            case 'fury': this.specialCooldowns.fury = 1200; break;
             case 'meteor': this.specialCooldowns.meteor = 1200; break;
           }
         }
@@ -661,12 +670,10 @@
           }
         }
 
-        // Update bow animation
         if (this.bowAnimation > 0) {
           this.bowAnimation--;
         }
         
-        // Update particles
         this.particles = this.particles.filter(p => p.life > 0);
         this.particles.forEach(p => {
           p.x += p.dx;
@@ -677,7 +684,6 @@
       }
 
       draw() {
-        // Draw particles
         this.particles.forEach(p => {
           ctx.globalAlpha = p.life / 30;
           ctx.fillStyle = p.color;
@@ -690,6 +696,31 @@
         ctx.save();
         ctx.translate(this.x, this.y);
         this.bowAngle = Math.atan2(mouse.y - this.y, mouse.x - this.x);
+        
+        if (this.furyActive) {
+          const furyPulse = Math.sin(this.animationTimer * 0.2) * 10;
+          
+          ctx.beginPath();
+          ctx.arc(0, 0, this.radius + 20 + furyPulse, 0, Math.PI * 2);
+          const furyGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, this.radius + 40);
+          furyGradient.addColorStop(0, 'rgba(255, 0, 0, 0.8)');
+          furyGradient.addColorStop(0.5, 'rgba(255, 255, 0, 0.5)');
+          furyGradient.addColorStop(1, 'rgba(0, 0, 255, 0)');
+          ctx.fillStyle = furyGradient;
+          ctx.fill();
+          
+          for (let i = 0; i < 12; i++) {
+            const angle = (i / 12) * Math.PI * 2 + this.animationTimer * 0.1;
+            const dist = this.radius + 30 + Math.sin(this.animationTimer * 0.2 + i) * 10;
+            const particleX = Math.cos(angle) * dist;
+            const particleY = Math.sin(angle) * dist;
+            
+            ctx.fillStyle = `rgba(${Math.random() * 155 + 100}, ${Math.random() * 100}, ${Math.random() * 255}, 0.7)`;
+            ctx.beginPath();
+            ctx.arc(particleX, particleY, 4, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
         
         if (this.dashing) {
           ctx.beginPath();
@@ -718,13 +749,18 @@
           }
         }
         
-        // Draw player body
-        ctx.fillStyle = this.invulnerable ? (hellMode ? "#ff5555" : "#00ffff") : (hellMode ? "#ff0000" : "#00ff88");
+        const bodyColor = this.invulnerable ? (hellMode ? "#ff5555" : "#00ffff") : 
+                         this.furyActive ? "#ff4400" : (hellMode ? "#ff0000" : "#00ff88");
+        
+        ctx.fillStyle = bodyColor;
+        ctx.shadowColor = this.furyActive ? '#ffaa00' : '#00ffaa';
+        ctx.shadowBlur = this.furyActive ? 20 : 10;
         ctx.beginPath();
         ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
         ctx.fill();
         
-        // Draw player details (face)
+        ctx.shadowBlur = 0;
+        
         ctx.fillStyle = "white";
         ctx.beginPath();
         ctx.arc(-8, -8, 5, 0, Math.PI * 2);
@@ -741,7 +777,6 @@
         ctx.arc(10, -8, 2, 0, Math.PI * 2);
         ctx.fill();
         
-        // Draw cape/cloak with animation
         ctx.fillStyle = hellMode ? "#8B0000" : "#0044aa";
         ctx.beginPath();
         ctx.moveTo(-this.radius, 0);
@@ -752,24 +787,20 @@
         );
         ctx.fill();
         
-        // Draw bow separately, positioned outside the player
         ctx.save();
         ctx.rotate(this.bowAngle);
-        ctx.translate(35, 0); // Position bow outside player
+        ctx.translate(35, 0);
         
-        // Bow body with detailed design
         ctx.strokeStyle = "#8B4513";
         ctx.lineWidth = 6;
         ctx.beginPath();
         
         const pull = this.bowAnimation > 0 ? 10 - this.bowAnimation : 0;
         
-        // Bow curve with animation
         ctx.moveTo(-5, -15);
         ctx.quadraticCurveTo(pull, 0, -5, 15);
         ctx.stroke();
         
-        // Bow details - engravings
         ctx.strokeStyle = "#D2691E";
         ctx.lineWidth = 1;
         for (let i = -12; i <= 12; i += 4) {
@@ -779,7 +810,6 @@
           ctx.stroke();
         }
         
-        // Bow string
         if (this.bowAnimation > 0) {
           ctx.strokeStyle = "#DDD";
           ctx.lineWidth = 2;
@@ -797,29 +827,26 @@
           ctx.stroke();
         }
         
-        // Bow gems/decoration
-        ctx.fillStyle = hellMode ? "#ff5555" : "#00ffff";
+        ctx.fillStyle = this.furyActive ? "#ff0000" : (hellMode ? "#ff5555" : "#00ffff");
         ctx.beginPath();
         ctx.arc(-5, 0, 3, 0, Math.PI * 2);
         ctx.fill();
         
         ctx.restore();
-        
         ctx.restore();
       }
       
       takeDamage(amount) {
         if (!this.shieldActive && !this.invulnerable) {
-          this.health -= amount;
+          const reducedDamage = this.furyActive ? amount * 0.8 : amount;
+          this.health -= reducedDamage;
           
           this.combo = 0;
           this.comboTimer = 0;
           
-          // Damage flash effect
           ctx.fillStyle = hellMode ? 'rgba(255, 0, 0, 0.7)' : 'rgba(255, 0, 0, 0.5)';
           ctx.fillRect(0, 0, canvas.width, canvas.height);
           
-          // Damage particles
           for (let i = 0; i < 10; i++) {
             this.particles.push({
               x: this.x,
@@ -844,7 +871,7 @@
     }
 
     class Arrow {
-      constructor(x, y, angle, specialEffect = null) {
+      constructor(x, y, angle, isMultiArrow = false) {
         this.x = x;
         this.y = y;
         this.angle = angle;
@@ -852,25 +879,25 @@
         this.dx = Math.cos(angle) * this.speed;
         this.dy = Math.sin(angle) * this.speed;
         this.alive = true;
-        this.specialEffect = specialEffect;
         this.lifetime = 120;
-        this.damage = 25;
-        this.pierce = 0;
+        this.damage = isMultiArrow ? 25 : (player.furyActive ? 30 : 25);
+        this.pierce = isMultiArrow ? 999 : 0;
+        this.isMultiArrow = isMultiArrow;
+        this.damageDecay = 0.55;
+        this.hitCount = 0;
         this.trail = [];
         this.particles = [];
         this.animationTimer = 0;
+        this.specialEffect = isMultiArrow ? 'multi' : null;
         
-        if (specialEffect === 'lightning') {
-          this.damage = 40;
-          this.pierce = 2;
-        } else if (specialEffect === 'explosive') {
-          this.damage = 35;
+        if (isMultiArrow) {
+          this.color = '#00aaff';
         }
       }
 
       update() {
         this.animationTimer++;
-        // Store trail positions
+        
         if (this.trail.length > 5) this.trail.shift();
         this.trail.push({x: this.x, y: this.y});
         
@@ -878,34 +905,25 @@
         this.y += this.dy;
         this.lifetime--;
         
-        // Add particles for trail effect
         if (this.lifetime % 3 === 0) {
           this.particles.push({
             x: this.x,
             y: this.y,
             size: Math.random() * 3 + 1,
             life: 20,
-            color: this.specialEffect === 'lightning' ? 'cyan' : 
-                  this.specialEffect === 'explosive' ? 'orange' : 
-                  hellMode ? '#ff8888' : '#88ff88'
+            color: this.isMultiArrow ? '#00aaff' : (hellMode ? '#ff8888' : '#88ff88')
           });
         }
         
         if (this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height || this.lifetime <= 0) {
           this.alive = false;
-          
-          if (this.specialEffect === 'explosive') {
-            explosions.push(new Explosion(this.x, this.y, 72));
-          }
         }
         
-        // Update particles
         this.particles = this.particles.filter(p => p.life > 0);
         this.particles.forEach(p => p.life--);
       }
 
       draw() {
-        // Draw particles
         this.particles.forEach(p => {
           ctx.globalAlpha = p.life / 20;
           ctx.fillStyle = p.color;
@@ -915,9 +933,8 @@
         });
         ctx.globalAlpha = 1;
         
-        // Draw trail
         if (this.trail.length > 1) {
-          ctx.strokeStyle = hellMode ? 'rgba(255, 100, 100, 0.3)' : 'rgba(0, 255, 255, 0.3)';
+          ctx.strokeStyle = this.isMultiArrow ? 'rgba(0, 170, 255, 0.3)' : (hellMode ? 'rgba(255, 100, 100, 0.3)' : 'rgba(0, 255, 255, 0.3)');
           ctx.lineWidth = 2;
           ctx.beginPath();
           ctx.moveTo(this.trail[0].x, this.trail[0].y);
@@ -931,73 +948,55 @@
         ctx.translate(this.x, this.y);
         ctx.rotate(this.angle);
         
-        if (this.specialEffect === 'lightning') {
-          // Lightning arrow with detailed effects
-          ctx.fillStyle = "gold";
-          ctx.strokeStyle = "white";
-          ctx.lineWidth = 2;
-          ctx.beginPath();
-          ctx.moveTo(0, 0);
-          ctx.lineTo(25, 0);
-          ctx.stroke();
-          
-          // Lightning effects around the arrow
-          for (let i = 0; i < 6; i++) {
-            const offset = Math.random() * 6 - 3;
-            ctx.beginPath();
-            ctx.moveTo(i * 4, offset);
-            ctx.lineTo((i + 1) * 4, offset + (Math.random() * 6 - 3));
-            ctx.strokeStyle = "cyan";
-            ctx.stroke();
-          }
-          
-          // Lightning aura
-          ctx.beginPath();
-          ctx.arc(0, 0, 10, 0, Math.PI * 2);
-          ctx.fillStyle = 'rgba(255, 255, 150, 0.3)';
-          ctx.fill();
-          
-          ctx.beginPath();
-          ctx.arc(0, 0, 15, 0, Math.PI * 2);
-          const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, 15);
-          gradient.addColorStop(0, 'rgba(0, 255, 255, 0.5)');
-          gradient.addColorStop(1, 'rgba(0, 255, 255, 0)');
-          ctx.fillStyle = gradient;
-          ctx.fill();
-        } else if (this.specialEffect === 'explosive') {
-          // Explosive arrow with fire effects
-          const gradient = ctx.createLinearGradient(0, -5, 25, 0);
-          gradient.addColorStop(0, 'red');
-          gradient.addColorStop(0.5, 'orange');
-          gradient.addColorStop(1, 'yellow');
+        if (this.isMultiArrow) {
+          const gradient = ctx.createLinearGradient(0, -3, 25, 0);
+          gradient.addColorStop(0, '#0066ff');
+          gradient.addColorStop(1, '#00aaff');
           
           ctx.fillStyle = gradient;
-          ctx.fillRect(0, -4, 25, 8);
+          ctx.fillRect(0, -3, 25, 6);
           
-          // Explosive tip
+          ctx.fillStyle = '#00ccff';
+          ctx.shadowColor = '#00aaff';
+          ctx.shadowBlur = 10;
           ctx.beginPath();
           ctx.arc(25, 0, 5, 0, Math.PI * 2);
-          ctx.fillStyle = 'rgba(255, 100, 0, 0.7)';
           ctx.fill();
+          ctx.shadowBlur = 0;
           
-          // Fire particles
-          for (let i = 0; i < 3; i++) {
-            ctx.fillStyle = `rgba(255, ${150 + Math.random() * 100}, 0, 0.8)`;
-            ctx.beginPath();
-            ctx.arc(25 + Math.random() * 5, Math.random() * 8 - 4, 2, 0, Math.PI * 2);
-            ctx.fill();
-          }
-          
-          // Explosive aura
+          ctx.fillStyle = '#aaddff';
           ctx.beginPath();
-          ctx.arc(0, 0, 12, 0, Math.PI * 2);
-          const auraGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, 12);
-          auraGradient.addColorStop(0, 'rgba(255, 100, 0, 0.5)');
-          auraGradient.addColorStop(1, 'rgba(255, 100, 0, 0)');
-          ctx.fillStyle = auraGradient;
+          ctx.moveTo(25, 0);
+          ctx.lineTo(20, -4);
+          ctx.lineTo(20, 4);
+          ctx.closePath();
           ctx.fill();
+          
+          ctx.fillStyle = '#00aaff';
+          ctx.beginPath();
+          ctx.moveTo(0, -3);
+          ctx.lineTo(-5, -6);
+          ctx.lineTo(-5, 0);
+          ctx.closePath();
+          ctx.fill();
+          
+          ctx.fillStyle = '#0066ff';
+          ctx.beginPath();
+          ctx.moveTo(0, 3);
+          ctx.lineTo(-5, 6);
+          ctx.lineTo(-5, 0);
+          ctx.closePath();
+          ctx.fill();
+          
+          ctx.strokeStyle = '#00aaff';
+          ctx.lineWidth = 1;
+          for (let i = 5; i < 20; i += 5) {
+            ctx.beginPath();
+            ctx.moveTo(i, -2);
+            ctx.lineTo(i, 2);
+            ctx.stroke();
+          }
         } else {
-          // Regular arrow with detailed design
           const gradient = ctx.createLinearGradient(0, -3, 25, 0);
           gradient.addColorStop(0, hellMode ? '#ff0000' : '#00ff88');
           gradient.addColorStop(1, hellMode ? '#ff5555' : '#00ffff');
@@ -1005,16 +1004,14 @@
           ctx.fillStyle = gradient;
           ctx.fillRect(0, -3, 25, 6);
           
-          // Arrowhead
+          ctx.fillStyle = 'silver';
           ctx.beginPath();
           ctx.moveTo(25, 0);
           ctx.lineTo(20, -4);
           ctx.lineTo(20, 4);
           ctx.closePath();
-          ctx.fillStyle = 'silver';
           ctx.fill();
           
-          // Fletching
           ctx.fillStyle = hellMode ? '#ff5555' : '#ff00ff';
           ctx.beginPath();
           ctx.moveTo(0, -3);
@@ -1031,7 +1028,6 @@
           ctx.closePath();
           ctx.fill();
           
-          // Arrow details
           ctx.strokeStyle = hellMode ? '#ff8888' : '#00aaaa';
           ctx.lineWidth = 1;
           for (let i = 5; i < 20; i += 5) {
@@ -1060,7 +1056,7 @@
         }
         
         switch(type) {
-          case 1: // Basic enemy
+          case 1:
             this.radius = 18;
             this.speed = 2.5 + wave * 0.07;
             this.health = 40 + wave * 3;
@@ -1068,10 +1064,11 @@
             this.damage = 0.5;
             this.scoreValue = 10;
             this.burnTimer = 0;
+            this.freezeDamageTimer = 0;
             this.particles = [];
             this.animationTimer = 0;
             break;
-          case 2: // Tank enemy
+          case 2:
             this.radius = 22;
             this.speed = 2 + wave * 0.05;
             this.health = 100 + wave * 6;
@@ -1079,10 +1076,11 @@
             this.damage = 0.8;
             this.scoreValue = 25;
             this.burnTimer = 0;
+            this.freezeDamageTimer = 0;
             this.particles = [];
             this.animationTimer = 0;
             break;
-          case 3: // Fast enemy
+          case 3:
             this.radius = 15;
             this.speed = 3.6 + wave * 0.09;
             this.health = 30 + wave * 2;
@@ -1090,10 +1088,11 @@
             this.damage = 0.3;
             this.scoreValue = 15;
             this.burnTimer = 0;
+            this.freezeDamageTimer = 0;
             this.particles = [];
             this.animationTimer = 0;
             break;
-          case 4: // Big enemy
+          case 4:
             this.radius = 30;
             this.speed = 1.2 + wave * 0.03;
             this.health = 200 + wave * 10;
@@ -1101,10 +1100,11 @@
             this.damage = 1.2;
             this.scoreValue = 40;
             this.burnTimer = 0;
+            this.freezeDamageTimer = 0;
             this.particles = [];
             this.animationTimer = 0;
             break;
-          case 5: // Ranged enemy
+          case 5:
             this.radius = 20;
             this.speed = 2 + wave * 0.06;
             this.health = 70 + wave * 4;
@@ -1114,10 +1114,11 @@
             this.shootingRange = 300;
             this.scoreValue = 30;
             this.burnTimer = 0;
+            this.freezeDamageTimer = 0;
             this.particles = [];
             this.animationTimer = 0;
             break;
-          case 6: // Wave 5 Boss - Rei Violeta
+          case 6:
             this.radius = 55;
             this.speed = 3.5;
             this.health = 500 + wave * 40;
@@ -1128,10 +1129,11 @@
             this.fireTrails = [];
             this.scoreValue = 200;
             this.burnTimer = 0;
+            this.freezeDamageTimer = 0;
             this.animationTimer = 0;
             this.particles = [];
             break;
-          case 7: // Wave 10 Boss - Rei Dourado
+          case 7:
             this.radius = 55;
             this.speed = 3;
             this.health = (500 + wave * 40) * 1.4;
@@ -1141,10 +1143,11 @@
             this.specialCooldown = 0;
             this.scoreValue = 400;
             this.burnTimer = 0;
+            this.freezeDamageTimer = 0;
             this.animationTimer = 0;
             this.particles = [];
             break;
-          case 8: // Final Boss - Imperador do Mundo
+          case 8:
             this.radius = 70;
             this.speed = 2.8;
             this.health = (500 + wave * 40) * 2;
@@ -1156,10 +1159,11 @@
             this.auraActive = false;
             this.scoreValue = 1000;
             this.burnTimer = 0;
+            this.freezeDamageTimer = 0;
             this.animationTimer = 0;
             this.particles = [];
             break;
-          case 9: // Hell Boss - Devorador de Almas
+          case 9:
             this.radius = 80;
             this.speed = 0; 
             this.health = (500 + wave * 40) * 2.3; 
@@ -1173,6 +1177,7 @@
             this.auraColor = "#ff0000";
             this.scoreValue = 2000;
             this.burnTimer = 0;
+            this.freezeDamageTimer = 0;
             this.animationTimer = 0;
             this.particles = [];
             break;
@@ -1186,12 +1191,12 @@
         this.frozenColor = "#00aaff";
         this.isFrozen = false;
         this.burnDamageTimer = 0;
+        this.freezeDoTTimer = 0;
       }
 
       update() {
         this.animationTimer++;
         
-        // Update particles
         this.particles = this.particles.filter(p => p.life > 0);
         this.particles.forEach(p => {
           p.x += p.dx;
@@ -1206,9 +1211,8 @@
           
           if (this.burnDamageTimer <= 0) {
             this.takeDamage(10);
-            this.burnDamageTimer = 60; // Damage every second
+            this.burnDamageTimer = 60;
             
-            // Add burn particles
             for (let i = 0; i < 3; i++) {
               this.particles.push({
                 x: this.x + (Math.random() - 0.5) * this.radius * 2,
@@ -1232,6 +1236,24 @@
           this.slowTimer--;
           this.speed = this.originalSpeed * 0.3;
           this.isFrozen = true;
+          
+          this.freezeDoTTimer--;
+          if (this.freezeDoTTimer <= 0) {
+            this.takeDamage(this.maxHealth * 0.25 / 60);
+            this.freezeDoTTimer = 60;
+            
+            for (let i = 0; i < 5; i++) {
+              this.particles.push({
+                x: this.x + (Math.random() - 0.5) * this.radius * 2,
+                y: this.y + (Math.random() - 0.5) * this.radius * 2,
+                dx: (Math.random() - 0.5) * 2,
+                dy: (Math.random() - 0.5) * 2,
+                size: Math.random() * 3 + 2,
+                life: 20,
+                color: '#aaddff'
+              });
+            }
+          }
         } else {
           this.speed = this.originalSpeed;
           this.isFrozen = false;
@@ -1253,7 +1275,6 @@
             enemyProjectiles.push(new EnemyProjectile(this.x, this.y, shootAngle, this.type));
             this.shootCooldown = 90;
             
-            // Casting effect
             for (let i = 0; i < 10; i++) {
               const particleAngle = shootAngle + (Math.random() - 0.5) * 0.5;
               this.particles.push({
@@ -1287,7 +1308,6 @@
               enemyProjectiles.push(new EnemyProjectile(this.x, this.y, shootAngle, this.type));
               this.shootCooldown = 20;
               
-              // Casting effect
               for (let i = 0; i < 15; i++) {
                 const particleAngle = shootAngle + (Math.random() - 0.5) * 0.3;
                 this.particles.push({
@@ -1310,7 +1330,6 @@
               }
               this.shootCooldown = 80;
               
-              // Casting effect
               for (let i = 0; i < 20; i++) {
                 const particleAngle = shootAngle + (Math.random() - 0.5) * 0.5;
                 this.particles.push({
@@ -1333,7 +1352,6 @@
               }
               this.specialCooldown = 500;
               
-              // Special attack effect
               for (let i = 0; i < 50; i++) {
                 const particleAngle = Math.random() * Math.PI * 2;
                 this.particles.push({
@@ -1356,7 +1374,6 @@
               this.auraActive = true;
               this.speed *= 1.2;
               
-              // Phase change effect
               for (let i = 0; i < 100; i++) {
                 const particleAngle = Math.random() * Math.PI * 2;
                 this.particles.push({
@@ -1378,7 +1395,6 @@
               enemies.push(new Enemy(3, this.wave + 5));
               this.minionCooldown = minionInterval;
               
-              // Minion summon effect
               for (let i = 0; i < 30; i++) {
                 const particleAngle = Math.random() * Math.PI * 2;
                 this.particles.push({
@@ -1400,7 +1416,6 @@
               }
               this.shootCooldown = 40;
               
-              // Casting effect
               for (let i = 0; i < 25; i++) {
                 const particleAngle = shootAngle + (Math.random() - 0.5) * 0.5;
                 this.particles.push({
@@ -1422,7 +1437,6 @@
               this.y = Math.random() * (canvas.height - 200) + 100;
               this.teleportCooldown = 90;
               
-              // Teleport effect
               for (let i = 0; i < 80; i++) {
                 const particleAngle = Math.random() * Math.PI * 2;
                 this.particles.push({
@@ -1445,7 +1459,6 @@
               }
               this.shootCooldown = 240;
               
-              // Casting effect
               for (let i = 0; i < 30; i++) {
                 const particleAngle = angle + (Math.random() - 0.5) * 0.5;
                 this.particles.push({
@@ -1471,7 +1484,6 @@
               darkMeteors.push(new DarkMeteor(player.x, player.y));
               this.meteorCooldown = 240;
               
-              // Meteor cast effect
               for (let i = 0; i < 40; i++) {
                 const particleAngle = Math.random() * Math.PI * 2;
                 this.particles.push({
@@ -1494,7 +1506,6 @@
               }
               this.radialAttackCooldown = 600;
               
-              // Radial attack effect
               for (let i = 0; i < 60; i++) {
                 const particleAngle = Math.random() * Math.PI * 2;
                 this.particles.push({
@@ -1520,7 +1531,6 @@
       }
 
       draw() {
-        // Draw particles
         this.particles.forEach(p => {
           ctx.globalAlpha = p.life / 30;
           ctx.fillStyle = p.color;
@@ -1540,7 +1550,6 @@
           ctx.fill();
         }
         
-        // Draw burning effect if active
         if (this.burnTimer > 0) {
           for (let i = 0; i < 3; i++) {
             const flameX = Math.random() * this.radius * 2 - this.radius;
@@ -1554,7 +1563,6 @@
           }
         }
         
-        // Draw stunned/lightning effect if active
         if (this.stunnedTimer > 0) {
           ctx.strokeStyle = "cyan";
           ctx.lineWidth = 2;
@@ -1572,10 +1580,9 @@
         ctx.fillStyle = this.isFrozen ? this.frozenColor : this.color;
         
         switch(this.type) {
-         case 1: // Goblin detalhado
+         case 1:
   ctx.save();
   
-  // Corpo principal
   const bodyGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, this.radius);
   bodyGradient.addColorStop(0, hellMode ? "#ff6b6b" : "#ff8e8e");
   bodyGradient.addColorStop(1, hellMode ? "#d13434" : "#d86060");
@@ -1585,7 +1592,6 @@
   ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
   ctx.fill();
   
-  // Padrão de pele
   ctx.strokeStyle = hellMode ? "#8b0000" : "#a52a2a";
   ctx.lineWidth = 1;
   for (let i = 0; i < 8; i++) {
@@ -1602,7 +1608,6 @@
     ctx.stroke();
   }
   
-  // Olhos brilhantes
   ctx.fillStyle = hellMode ? "#ff0000" : "#00ff00";
   ctx.beginPath();
   ctx.arc(-6, -4, 4, 0, Math.PI * 2);
@@ -1611,7 +1616,6 @@
   ctx.arc(6, -4, 4, 0, Math.PI * 2);
   ctx.fill();
   
-  // Pupilas
   ctx.fillStyle = "#000";
   ctx.beginPath();
   ctx.arc(-5, -4, 1.5, 0, Math.PI * 2);
@@ -1620,7 +1624,6 @@
   ctx.arc(7, -4, 1.5, 0, Math.PI * 2);
   ctx.fill();
   
-  // Brilho nos olhos (animação)
   const eyeGlow = Math.sin(this.animationTimer * 0.2) * 0.5 + 0.5;
   ctx.fillStyle = `rgba(255, 255, 255, ${eyeGlow * 0.7})`;
   ctx.beginPath();
@@ -1630,7 +1633,6 @@
   ctx.arc(8, -5, 1.5, 0, Math.PI * 2);
   ctx.fill();
   
-  // Boca com dentes afiados
   ctx.fillStyle = "#000";
   ctx.beginPath();
   ctx.arc(0, 5, 6, 0.2, Math.PI - 0.2);
@@ -1647,7 +1649,6 @@
     ctx.fill();
   }
   
-  // Chifres
   ctx.fillStyle = hellMode ? "#600000" : "#5d4037";
   ctx.beginPath();
   ctx.moveTo(-8, -this.radius);
@@ -1663,7 +1664,6 @@
   ctx.closePath();
   ctx.fill();
   
-  // Orelhas pontudas
   ctx.fillStyle = hellMode ? "#ff6b6b" : "#ff8e8e";
   ctx.beginPath();
   ctx.moveTo(-this.radius + 2, -this.radius + 5);
@@ -1682,10 +1682,9 @@
   ctx.restore();
   break;
             
-         case 2: // Orc detalhado
+         case 2:
   ctx.save();
   
-  // Corpo principal
   const orcGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, this.radius);
   orcGradient.addColorStop(0, hellMode ? "#c62828" : "#d32f2f");
   orcGradient.addColorStop(1, hellMode ? "#8b0000" : "#b71c1c");
@@ -1695,13 +1694,11 @@
   ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
   ctx.fill();
   
-  // Armadura metálica
   ctx.fillStyle = hellMode ? "#424242" : "#212121";
   ctx.beginPath();
   ctx.arc(0, 0, this.radius - 3, 0, Math.PI * 2);
   ctx.fill();
   
-  // Detalhes da armadura
   ctx.fillStyle = hellMode ? "#ff6d00" : "#ffab00";
   for (let i = 0; i < 8; i++) {
     const angle = (i / 8) * Math.PI * 2;
@@ -1714,7 +1711,6 @@
     ctx.fill();
   }
   
-  // Olhos furiosos
   ctx.fillStyle = "#ffd54f";
   ctx.beginPath();
   ctx.arc(-8, -5, 5, 0, Math.PI * 2);
@@ -1731,7 +1727,6 @@
   ctx.arc(9, -5, 2.5, 0, Math.PI * 2);
   ctx.fill();
   
-  // Sobrancelhas furiosas
   ctx.strokeStyle = "#000";
   ctx.lineWidth = 3;
   ctx.beginPath();
@@ -1744,7 +1739,6 @@
   ctx.lineTo(4, -7);
   ctx.stroke();
   
-  // Presas
   ctx.fillStyle = "#fff";
   ctx.beginPath();
   ctx.moveTo(-5, 8);
@@ -1760,7 +1754,6 @@
   ctx.closePath();
   ctx.fill();
   
-  // Cicatrizes
   ctx.strokeStyle = "#000";
   ctx.lineWidth = 1.5;
   ctx.beginPath();
@@ -1773,7 +1766,6 @@
   ctx.lineTo(5, 7);
   ctx.stroke();
   
-  // Aura de fúria (animação)
   const rageAura = Math.sin(this.animationTimer * 0.1) * 5 + 10;
   ctx.beginPath();
   ctx.arc(0, 0, this.radius + rageAura, 0, Math.PI * 2);
@@ -1786,10 +1778,9 @@
   ctx.restore();
   break;
             
-          case 3: // Imp detalhado
+          case 3:
   ctx.save();
   
-  // Corpo principal
   const impGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, this.radius);
   impGradient.addColorStop(0, hellMode ? "#ffeb3b" : "#fff176");
   impGradient.addColorStop(1, hellMode ? "#fbc02d" : "#ffd54f");
@@ -1799,12 +1790,10 @@
   ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
   ctx.fill();
   
-  // Asas de morcego (com animação)
   const wingFlap = Math.sin(this.animationTimer * 0.3) * 0.2 + 0.9;
   
   ctx.fillStyle = hellMode ? "rgba(0, 0, 0, 0.7)" : "rgba(55, 71, 79, 0.7)";
   
-  // Asa esquerda
   ctx.beginPath();
   ctx.moveTo(-this.radius, 0);
   ctx.bezierCurveTo(
@@ -1814,7 +1803,6 @@
   );
   ctx.fill();
   
-  // Asa direita
   ctx.beginPath();
   ctx.moveTo(this.radius, 0);
   ctx.bezierCurveTo(
@@ -1824,11 +1812,9 @@
   );
   ctx.fill();
   
-  // Detalhes das asas
   ctx.strokeStyle = hellMode ? "#ff6d00" : "#5d4037";
   ctx.lineWidth = 1.5;
   
-  // Estrutura da asa esquerda
   ctx.beginPath();
   ctx.moveTo(-this.radius, 0);
   ctx.lineTo(-this.radius * 1.8, -this.radius * 0.7 * wingFlap);
@@ -1836,7 +1822,6 @@
   ctx.lineTo(-this.radius * 1.5, this.radius * 0.5);
   ctx.stroke();
   
-  // Estrutura da asa direita
   ctx.beginPath();
   ctx.moveTo(this.radius, 0);
   ctx.lineTo(this.radius * 1.8, -this.radius * 0.7 * wingFlap);
@@ -1844,7 +1829,6 @@
   ctx.lineTo(this.radius * 1.5, this.radius * 0.5);
   ctx.stroke();
   
-  // Olhos malignos
   ctx.fillStyle = "#000";
   ctx.beginPath();
   ctx.arc(-4, -2, 3, 0, Math.PI * 2);
@@ -1853,7 +1837,6 @@
   ctx.arc(4, -2, 3, 0, Math.PI * 2);
   ctx.fill();
   
-  // Brilho nos olhos
   ctx.fillStyle = hellMode ? "#ff1744" : "#d50000";
   ctx.beginPath();
   ctx.arc(-4, -2, 1.5, 0, Math.PI * 2);
@@ -1862,10 +1845,8 @@
   ctx.arc(4, -2, 1.5, 0, Math.PI * 2);
   ctx.fill();
   
-  // Chifres curvados
   ctx.fillStyle = hellMode ? "#4a148c" : "#5d4037";
   
-  // Chifre esquerdo
   ctx.beginPath();
   ctx.moveTo(-5, -this.radius);
   ctx.bezierCurveTo(
@@ -1875,7 +1856,6 @@
   );
   ctx.stroke();
   
-  // Chifre direito
   ctx.beginPath();
   ctx.moveTo(5, -this.radius);
   ctx.bezierCurveTo(
@@ -1885,14 +1865,12 @@
   );
   ctx.stroke();
   
-  // Sorriso maligno
   ctx.strokeStyle = "#000";
   ctx.lineWidth = 2;
   ctx.beginPath();
   ctx.arc(0, 5, 5, 0.2, Math.PI - 0.2);
   ctx.stroke();
   
-  // Rabo pontudo
   ctx.beginPath();
   ctx.moveTo(0, this.radius);
   ctx.lineTo(5, this.radius + 10);
@@ -1906,10 +1884,9 @@
   ctx.restore();
   break;
             
-          case 4: // Ogre detalhado
+          case 4:
   ctx.save();
   
-  // Corpo principal
   const ogreGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, this.radius);
   ogreGradient.addColorStop(0, hellMode ? "#388e3c" : "#4caf50");
   ogreGradient.addColorStop(1, hellMode ? "#1b5e20" : "#2e7d32");
@@ -1919,23 +1896,19 @@
   ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
   ctx.fill();
   
-  // Barriga proeminente
   ctx.fillStyle = hellMode ? "#8bc34a" : "#aed581";
   ctx.beginPath();
   ctx.arc(0, 5, this.radius - 8, 0, Math.PI * 2);
   ctx.fill();
   
-  // Cicatrizes e detalhes
   ctx.strokeStyle = hellMode ? "#33691e" : "#1b5e20";
   ctx.lineWidth = 2;
   
-  // Cicatriz no olho
   ctx.beginPath();
   ctx.moveTo(-15, -5);
   ctx.lineTo(-5, -10);
   ctx.stroke();
   
-  // Detalhes musculares
   ctx.beginPath();
   ctx.arc(-10, 0, 8, Math.PI * 0.2, Math.PI * 0.8);
   ctx.stroke();
@@ -1944,7 +1917,6 @@
   ctx.arc(10, 0, 8, Math.PI * 1.2, Math.PI * 1.8);
   ctx.stroke();
   
-  // Olhos pequenos e furiosos
   ctx.fillStyle = "#000";
   ctx.beginPath();
   ctx.arc(-8, -8, 3, 0, Math.PI * 2);
@@ -1953,7 +1925,6 @@
   ctx.arc(8, -8, 3, 0, Math.PI * 2);
   ctx.fill();
   
-  // Sobrancelhas grossas
   ctx.fillStyle = hellMode ? "#1b5e20" : "#33691e";
   ctx.beginPath();
   ctx.rect(-12, -12, 8, 3);
@@ -1962,7 +1933,6 @@
   ctx.rect(4, -12, 8, 3);
   ctx.fill();
   
-  // Nariz largo
   ctx.fillStyle = hellMode ? "#7cb342" : "#9ccc65";
   ctx.beginPath();
   ctx.arc(0, -2, 6, 0, Math.PI * 2);
@@ -1976,7 +1946,6 @@
   ctx.arc(2, -2, 1.5, 0, Math.PI * 2);
   ctx.fill();
   
-  // Boca aberta com dentes
   ctx.fillStyle = "#000";
   ctx.beginPath();
   ctx.arc(0, 8, 10, 0, Math.PI);
@@ -1990,7 +1959,6 @@
     ctx.fill();
   }
   
-  // Clava com cravos
   ctx.fillStyle = hellMode ? "#5d4037" : "#6d4c41";
   ctx.beginPath();
   ctx.roundRect(this.radius - 5, -20, 20, 40, 5);
@@ -2003,7 +1971,6 @@
     ctx.fill();
   }
   
-  // Aura de terra (animação)
   const earthAura = Math.sin(this.animationTimer * 0.05) * 3 + 8;
   ctx.beginPath();
   ctx.arc(0, 0, this.radius + earthAura, 0, Math.PI * 2);
@@ -2016,10 +1983,9 @@
   ctx.restore();
   break;
             
-          case 5: // Mago detalhado
+          case 5:
   ctx.save();
   
-  // Corpo principal (túnica)
   const robeGradient = ctx.createLinearGradient(-this.radius, -this.radius, this.radius, this.radius);
   robeGradient.addColorStop(0, hellMode ? "#6a1b9a" : "#7b1fa2");
   robeGradient.addColorStop(1, hellMode ? "#4a148c" : "#4a148c");
@@ -2029,13 +1995,11 @@
   ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
   ctx.fill();
   
-  // Capuz
   ctx.fillStyle = hellMode ? "#4a148c" : "#5e35b1";
   ctx.beginPath();
   ctx.arc(0, -this.radius * 0.3, this.radius * 0.8, Math.PI, Math.PI * 2);
   ctx.fill();
   
-  // Detalhes da túnica
   ctx.strokeStyle = hellMode ? "#ea80fc" : "#e1bee7";
   ctx.lineWidth = 2;
   ctx.beginPath();
@@ -2048,7 +2012,6 @@
   ctx.lineTo(this.radius * 0.5, -this.radius * 0.2);
   ctx.stroke();
   
-  // Olhos brilhantes sob o capuz
   const glowIntensity = Math.sin(this.animationTimer * 0.2) * 0.5 + 0.5;
   ctx.fillStyle = `rgba(255, 64, 129, ${glowIntensity})`;
   ctx.beginPath();
@@ -2058,7 +2021,6 @@
   ctx.arc(5, -5, 3, 0, Math.PI * 2);
   ctx.fill();
   
-  // Mãos com energia mágica
   ctx.fillStyle = `rgba(255, 64, 129, ${glowIntensity * 0.7})`;
   ctx.beginPath();
   ctx.arc(-this.radius + 5, 0, 6, 0, Math.PI * 2);
@@ -2067,7 +2029,6 @@
   ctx.arc(this.radius - 5, 0, 6, 0, Math.PI * 2);
   ctx.fill();
   
-  // Cajado flutuante
   ctx.save();
   const staffFloat = Math.sin(this.animationTimer * 0.1) * 3;
   ctx.translate(0, staffFloat);
@@ -2079,13 +2040,11 @@
   ctx.lineTo(0, this.radius + 10);
   ctx.stroke();
   
-  // Cristal no topo do cajado (com brilho pulsante)
   ctx.fillStyle = `rgba(255, 64, 129, ${glowIntensity})`;
   ctx.beginPath();
   ctx.arc(0, -this.radius - 15, 5, 0, Math.PI * 2);
   ctx.fill();
   
-  // Aura do cristal
   ctx.beginPath();
   ctx.arc(0, -this.radius - 15, 10, 0, Math.PI * 2);
   const crystalGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, 10);
@@ -2096,7 +2055,6 @@
   
   ctx.restore();
   
-  // Orbe flutuante de energia (gira ao redor do mago)
   const orbAngle = this.animationTimer * 0.05;
   const orbX = Math.cos(orbAngle) * (this.radius + 15);
   const orbY = Math.sin(orbAngle) * (this.radius + 15);
@@ -2106,7 +2064,6 @@
   ctx.arc(orbX, orbY, 5, 0, Math.PI * 2);
   ctx.fill();
   
-  // Rastro da órbita
   ctx.strokeStyle = `rgba(255, 64, 129, 0.3)`;
   ctx.setLineDash([5, 5]);
   ctx.beginPath();
@@ -2114,7 +2071,6 @@
   ctx.stroke();
   ctx.setLineDash([]);
   
-  // Runas flutuantes
   for (let i = 0; i < 4; i++) {
     const runeAngle = orbAngle + (i * Math.PI / 2);
     const runeX = Math.cos(runeAngle) * (this.radius + 8);
@@ -2127,15 +2083,13 @@
   ctx.restore();
   break;
             
-          case 6: // Rei Violeta detalhado
+          case 6:
   ctx.save();
   ctx.rotate(Math.atan2(player.y - this.y, player.x - this.x));
   
-  // Coroa real elaborada
   ctx.fillStyle = hellMode ? "#8e24aa" : "#9c27b0";
   ctx.beginPath();
   
-  // Base da coroa
   ctx.moveTo(-25, -this.radius - 5);
   ctx.lineTo(25, -this.radius - 5);
   ctx.lineTo(20, -this.radius - 20);
@@ -2144,12 +2098,10 @@
   ctx.closePath();
   ctx.fill();
   
-  // Detalhes da coroa
   ctx.strokeStyle = hellMode ? "#ea80fc" : "#e1bee7";
   ctx.lineWidth = 2;
   ctx.stroke();
   
-  // Joias na coroa
   const jewelColors = ["#ff4081", "#00b0ff", "#76ff03"];
   for (let i = -1; i <= 1; i++) {
     ctx.fillStyle = jewelColors[i + 1];
@@ -2157,14 +2109,12 @@
     ctx.arc(i * 12, -this.radius - 15, 4, 0, Math.PI * 2);
     ctx.fill();
     
-    // Brilho das joias
     ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
     ctx.beginPath();
     ctx.arc(i * 12 - 1, -this.radius - 16, 1, 0, Math.PI * 2);
     ctx.fill();
   }
   
-  // Corpo real
   const kingGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, this.radius);
   kingGradient.addColorStop(0, hellMode ? "#7b1fa2" : "#8e24aa");
   kingGradient.addColorStop(1, hellMode ? "#4a148c" : "#6a1b9a");
@@ -2174,7 +2124,6 @@
   ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
   ctx.fill();
   
-  // Manto real
   ctx.fillStyle = hellMode ? "#4a148c" : "#5e35b1";
   ctx.beginPath();
   ctx.moveTo(-this.radius, this.radius * 0.5);
@@ -2188,7 +2137,6 @@
   ctx.closePath();
   ctx.fill();
   
-  // Padrão no manto
   ctx.fillStyle = hellMode ? "#ea80fc" : "#e1bee7";
   for (let i = -2; i <= 2; i++) {
     ctx.beginPath();
@@ -2196,7 +2144,6 @@
     ctx.fill();
   }
   
-  // Olhos reais
   ctx.fillStyle = "#fff";
   ctx.beginPath();
   ctx.arc(15, -10, 8, 0, Math.PI * 2);
@@ -2213,7 +2160,6 @@
   ctx.arc(18, 10, 4, 0, Math.PI * 2);
   ctx.fill();
   
-  // Brilho nos olhos
   const kingGlow = Math.sin(this.animationTimer * 0.1) * 0.5 + 0.5;
   ctx.fillStyle = `rgba(255, 64, 129, ${kingGlow})`;
   ctx.beginPath();
@@ -2223,14 +2169,12 @@
   ctx.arc(19, 9, 2, 0, Math.PI * 2);
   ctx.fill();
   
-  // Boca real
   ctx.strokeStyle = "#000";
   ctx.lineWidth = 2;
   ctx.beginPath();
   ctx.arc(10, 0, 5, 0, Math.PI);
   ctx.stroke();
   
-  // Cetro real
   ctx.strokeStyle = "#ffd600";
   ctx.lineWidth = 4;
   ctx.beginPath();
@@ -2243,13 +2187,11 @@
   ctx.arc(-this.radius - 30, -this.radius - 20, 8, 0, Math.PI * 2);
   ctx.fill();
   
-  // Joia no cetro
   ctx.fillStyle = "#00b0ff";
   ctx.beginPath();
   ctx.arc(-this.radius - 30, -this.radius - 20, 5, 0, Math.PI * 2);
   ctx.fill();
   
-  // Aura real pulsante
   const auraSize = this.radius + 15 + Math.sin(this.animationTimer * 0.1) * 5;
   ctx.beginPath();
   ctx.arc(0, 0, auraSize, 0, Math.PI * 2);
@@ -2259,7 +2201,6 @@
   ctx.fillStyle = kingAuraGradient;
   ctx.fill();
   
-  // Partículas mágicas ao redor
   for (let i = 0; i < 12; i++) {
     const particleAngle = (i / 12) * Math.PI * 2 + this.animationTimer * 0.01;
     const particleDist = this.radius + 25 + Math.sin(this.animationTimer * 0.05 + i) * 5;
@@ -2276,18 +2217,16 @@
   ctx.restore();
   break;
             
-          case 7: // Rei Dourado detalhado
+          case 7:
   ctx.save();
   ctx.rotate(Math.atan2(player.y - this.y, player.x - this.x));
   
-  // Coroa dourada elaborada
   const crownGradient = ctx.createLinearGradient(0, -this.radius - 30, 0, -this.radius - 5);
   crownGradient.addColorStop(0, "#ffd600");
   crownGradient.addColorStop(1, "#ffab00");
   
   ctx.fillStyle = crownGradient;
   
-  // Base da coroa
   ctx.beginPath();
   ctx.moveTo(-25, -this.radius - 5);
   ctx.lineTo(25, -this.radius - 5);
@@ -2297,12 +2236,10 @@
   ctx.closePath();
   ctx.fill();
   
-  // Detalhes da coroa
   ctx.strokeStyle = "#ff6d00";
   ctx.lineWidth = 2;
   ctx.stroke();
   
-  // Joias na coroa (rubi, esmeralda, safira)
   const royalJewelColors = ["#d50000", "#00c853", "#2962ff"];
   for (let i = -1; i <= 1; i++) {
     ctx.fillStyle = royalJewelColors[i + 1];
@@ -2310,14 +2247,12 @@
     ctx.arc(i * 12, -this.radius - 15, 5, 0, Math.PI * 2);
     ctx.fill();
     
-    // Brilho das joias
     ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
     ctx.beginPath();
     ctx.arc(i * 12 - 1, -this.radius - 16, 1.5, 0, Math.PI * 2);
     ctx.fill();
   }
   
-  // Corpo dourado
   const goldGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, this.radius);
   goldGradient.addColorStop(0, "#ffd600");
   goldGradient.addColorStop(1, "#ffab00");
@@ -2327,11 +2262,9 @@
   ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
   ctx.fill();
   
-  // Detalhes de luz e sombra
   ctx.strokeStyle = "#ff6d00";
   ctx.lineWidth = 2;
   
-  // Divisões do torso
   ctx.beginPath();
   ctx.arc(0, 0, this.radius - 5, Math.PI * 0.2, Math.PI * 0.8);
   ctx.stroke();
@@ -2340,7 +2273,6 @@
   ctx.arc(0, 0, this.radius - 5, Math.PI * 1.2, Math.PI * 1.8);
   ctx.stroke();
   
-  // Olhos reais
   ctx.fillStyle = "#fff";
   ctx.beginPath();
   ctx.arc(15, -10, 8, 0, Math.PI * 2);
@@ -2357,7 +2289,6 @@
   ctx.arc(18, 10, 4, 0, Math.PI * 2);
   ctx.fill();
   
-  // Brilho dourado nos olhos
   const goldGlow = Math.sin(this.animationTimer * 0.1) * 0.5 + 0.5;
   ctx.fillStyle = `rgba(255, 215, 0, ${goldGlow})`;
   ctx.beginPath();
@@ -2367,14 +2298,12 @@
   ctx.arc(19, 9, 2, 0, Math.PI * 2);
   ctx.fill();
   
-  // Boca real
   ctx.strokeStyle = "#000";
   ctx.lineWidth = 2;
   ctx.beginPath();
   ctx.arc(10, 0, 5, 0, Math.PI);
   ctx.stroke();
   
-  // Manto real dourado
   ctx.fillStyle = "rgba(255, 215, 0, 0.7)";
   ctx.beginPath();
   ctx.moveTo(-this.radius, this.radius * 0.5);
@@ -2388,7 +2317,6 @@
   ctx.closePath();
   ctx.fill();
   
-  // Padrão solar no manto
   ctx.strokeStyle = "#ff6d00";
   ctx.lineWidth = 2;
   for (let i = 0; i < 8; i++) {
@@ -2402,7 +2330,6 @@
     ctx.stroke();
   }
   
-  // Cetro solar
   ctx.strokeStyle = "#ffd600";
   ctx.lineWidth = 5;
   ctx.beginPath();
@@ -2410,13 +2337,11 @@
   ctx.lineTo(-this.radius - 40, -this.radius - 25);
   ctx.stroke();
   
-  // Sol no cetro
   ctx.fillStyle = "#ff6d00";
   ctx.beginPath();
   ctx.arc(-this.radius - 40, -this.radius - 25, 10, 0, Math.PI * 2);
   ctx.fill();
   
-  // Raios do sol
   for (let i = 0; i < 8; i++) {
     const rayAngle = (i / 8) * Math.PI * 2;
     ctx.beginPath();
@@ -2433,7 +2358,6 @@
     ctx.stroke();
   }
   
-  // Aura solar pulsante
   const sunAuraSize = this.radius + 20 + Math.sin(this.animationTimer * 0.1) * 8;
   ctx.beginPath();
   ctx.arc(0, 0, sunAuraSize, 0, Math.PI * 2);
@@ -2443,7 +2367,6 @@
   ctx.fillStyle = sunAuraGradient;
   ctx.fill();
   
-  // Partículas de luz dourada
   for (let i = 0; i < 16; i++) {
     const particleAngle = (i / 16) * Math.PI * 2 + this.animationTimer * 0.02;
     const particleDist = this.radius + 30 + Math.sin(this.animationTimer * 0.05 + i) * 8;
@@ -2460,17 +2383,15 @@
   ctx.restore();
   break;
             
-          case 8: // Imperador do Mundo detalhado
+          case 8:
   ctx.save();
   ctx.rotate(Math.atan2(player.y - this.y, player.x - this.x));
   
-  // Armadura imperial
   const emperorGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, this.radius);
   if (this.phase === 1) {
     emperorGradient.addColorStop(0, "#d50000");
     emperorGradient.addColorStop(1, "#b71c1c");
   } else {
-    // Fase 2 - Armadura enfurecida
     emperorGradient.addColorStop(0, "#ff5131");
     emperorGradient.addColorStop(1, "#c62828");
   }
@@ -2480,11 +2401,9 @@
   ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
   ctx.fill();
   
-  // Detalhes da armadura
   ctx.strokeStyle = this.phase === 1 ? "#ff6d00" : "#ffab00";
   ctx.lineWidth = 3;
   
-  // Divisões da armadura
   ctx.beginPath();
   ctx.arc(0, 0, this.radius - 10, Math.PI * 0.2, Math.PI * 0.8);
   ctx.stroke();
@@ -2493,13 +2412,11 @@
   ctx.arc(0, 0, this.radius - 10, Math.PI * 1.2, Math.PI * 1.8);
   ctx.stroke();
   
-  // Elmo imperial
   ctx.fillStyle = this.phase === 1 ? "#b71c1c" : "#d50000";
   ctx.beginPath();
   ctx.arc(0, -this.radius * 0.2, this.radius * 0.9, Math.PI, Math.PI * 2);
   ctx.fill();
   
-  // Crista do elmo
   ctx.fillStyle = this.phase === 1 ? "#ff6d00" : "#ffab00";
   ctx.beginPath();
   ctx.moveTo(-this.radius * 0.7, -this.radius * 0.2);
@@ -2508,7 +2425,6 @@
   ctx.closePath();
   ctx.fill();
   
-  // Olhos sob o elmo
   const emperorGlow = Math.sin(this.animationTimer * 0.1) * 0.5 + 0.5;
   ctx.fillStyle = `rgba(255, 255, 255, ${emperorGlow})`;
   ctx.beginPath();
@@ -2526,7 +2442,6 @@
   ctx.arc(10, -5, 3, 0, Math.PI * 2);
   ctx.fill();
   
-  // Brazão imperial no peito
   ctx.fillStyle = "#ffd600";
   ctx.beginPath();
   ctx.moveTo(0, 5);
@@ -2540,7 +2455,6 @@
   ctx.lineWidth = 1;
   ctx.stroke();
   
-  // Capa imperial
   ctx.fillStyle = this.phase === 1 ? "rgba(139, 0, 0, 0.7)" : "rgba(178, 34, 34, 0.7)";
   ctx.beginPath();
   ctx.moveTo(-this.radius, this.radius * 0.3);
@@ -2554,7 +2468,6 @@
   ctx.closePath();
   ctx.fill();
   
-  // Espada imperial
   ctx.fillStyle = "#9e9e9e";
   ctx.fillRect(this.radius - 5, -30, 10, 60);
   
@@ -2566,17 +2479,14 @@
   ctx.closePath();
   ctx.fill();
   
-  // Empunhadura da espada
   ctx.fillStyle = "#5d4037";
   ctx.fillRect(this.radius - 7, 0, 14, 15);
   
-  // Jóias na empunhadura
   ctx.fillStyle = "#d50000";
   ctx.beginPath();
   ctx.arc(this.radius, 7, 3, 0, Math.PI * 2);
   ctx.fill();
   
-  // Aura imperial
   const emperorAuraSize = this.radius + 25 + Math.sin(this.animationTimer * 0.1) * 10;
   ctx.beginPath();
   ctx.arc(0, 0, emperorAuraSize, 0, Math.PI * 2);
@@ -2593,7 +2503,6 @@
   ctx.fillStyle = emperorAuraGradient;
   ctx.fill();
   
-  // Partículas de energia
   for (let i = 0; i < 20; i++) {
     const particleAngle = (i / 20) * Math.PI * 2 + this.animationTimer * 0.03;
     const particleDist = this.radius + 35 + Math.sin(this.animationTimer * 0.05 + i) * 10;
@@ -2612,9 +2521,7 @@
     ctx.fill();
   }
   
-  // Efeito especial da fase 2
   if (this.phase === 2) {
-    // Chamas saindo das costas
     for (let i = -1; i <= 1; i += 2) {
       const flameCount = 5;
       for (let j = 0; j < flameCount; j++) {
@@ -2642,10 +2549,9 @@
   ctx.restore();
   break;
             
-         case 9: // Devorador de Almas - Design Extremamente Detalhado
+         case 9:
   ctx.save();
   
-  // Sistema de partículas orbital constante
   for (let i = 0; i < 20; i++) {
     const orbitAngle = (i / 20) * Math.PI * 2 + this.animationTimer * 0.01;
     const orbitRadius = this.radius + 30 + Math.sin(this.animationTimer * 0.05 + i) * 10;
@@ -2658,7 +2564,6 @@
     ctx.fill();
   }
 
-  // Aura demoníaca pulsante
   const DemonAuraPulse = Math.sin(this.animationTimer * 0.08) * 10 + 25;
   const DemonAuraGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, this.radius + DemonAuraPulse);
   DemonAuraGradient.addColorStop(0, 'rgba(120, 0, 200, 0.8)');
@@ -2670,7 +2575,6 @@
   ctx.arc(0, 0, this.radius + DemonAuraPulse, 0, Math.PI * 2);
   ctx.fill();
 
-  // Corpo principal com textura demoníaca
   const DemonBodyGradient = ctx.createRadialGradient(0, 0, this.radius * 0.3, 0, 0, this.radius);
   DemonBodyGradient.addColorStop(0, '#200030');
   DemonBodyGradient.addColorStop(1, '#0f0015');
@@ -2680,7 +2584,6 @@
   ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
   ctx.fill();
 
-  // Padrões de energia sinistra no corpo
   ctx.strokeStyle = 'rgba(150, 0, 255, 0.7)';
   ctx.lineWidth = 2;
   
@@ -2701,10 +2604,8 @@
     ctx.stroke();
   }
 
-  // Olhos demoníacos com brilho pulsante
   const eyePulse = Math.sin(this.animationTimer * 0.1) * 0.2 + 0.8;
   
-  // Olho esquerdo
   ctx.fillStyle = `rgba(255, 50, 50, ${eyePulse})`;
   ctx.beginPath();
   ctx.arc(-20, -15, 12, 0, Math.PI * 2);
@@ -2720,7 +2621,6 @@
   ctx.arc(-18, -16, 4, 0, Math.PI * 2);
   ctx.fill();
   
-  // Olho direito
   ctx.fillStyle = `rgba(255, 50, 50, ${eyePulse})`;
   ctx.beginPath();
   ctx.arc(20, -15, 12, 0, Math.PI * 2);
@@ -2736,16 +2636,13 @@
   ctx.arc(22, -16, 4, 0, Math.PI * 2);
   ctx.fill();
 
-  // Terceiro olho na testa
   ctx.fillStyle = `rgba(150, 0, 255, ${0.5 + Math.sin(this.animationTimer * 0.2) * 0.5})`;
   ctx.beginPath();
   ctx.arc(0, -25, 6, 0, Math.PI * 2);
   ctx.fill();
 
-  // Chifres retorcidos e detalhados
   ctx.fillStyle = '#330033';
   
-  // Chifre esquerdo
   ctx.save();
   ctx.translate(-25, -35);
   ctx.rotate(-0.5);
@@ -2756,7 +2653,6 @@
   ctx.bezierCurveTo(-10, -40, -15, -30, 0, 0);
   ctx.fill();
   
-  // Detalhes no chifre esquerdo
   ctx.strokeStyle = '#550055';
   ctx.lineWidth = 1.5;
   ctx.beginPath();
@@ -2765,7 +2661,6 @@
   ctx.stroke();
   ctx.restore();
 
-  // Chifre direito
   ctx.save();
   ctx.translate(25, -35);
   ctx.rotate(0.5);
@@ -2776,7 +2671,6 @@
   ctx.bezierCurveTo(10, -40, 15, -30, 0, 0);
   ctx.fill();
   
-  // Detalhes no chifre direito
   ctx.strokeStyle = '#550055';
   ctx.lineWidth = 1.5;
   ctx.beginPath();
@@ -2785,13 +2679,11 @@
   ctx.stroke();
   ctx.restore();
 
-  // Boca demoníaca com dentes afiados
   ctx.fillStyle = '#110011';
   ctx.beginPath();
   ctx.ellipse(0, 15, 25, 20, 0, 0, Math.PI);
   ctx.fill();
   
-  // Dentes superiores
   for (let i = 0; i < 8; i++) {
     const toothX = -20 + i * 6;
     ctx.fillStyle = '#ffffff';
@@ -2803,7 +2695,6 @@
     ctx.fill();
   }
   
-  // Língua bifurcada e animada
   const tongueMove = Math.sin(this.animationTimer * 0.1) * 3;
   ctx.fillStyle = '#ff0066';
   ctx.beginPath();
@@ -2812,7 +2703,6 @@
   ctx.bezierCurveTo(-15, 30 + tongueMove, -5, 25 + tongueMove, 0, 15);
   ctx.fill();
   
-  // Divisão da língua
   ctx.fillStyle = '#ff2288';
   ctx.beginPath();
   ctx.moveTo(0, 25);
@@ -2828,7 +2718,6 @@
   ctx.closePath();
   ctx.fill();
 
-  // Tentáculos saindo das costas
   for (let i = 0; i < 5; i++) {
     const tentacleAngle = (i / 5) * Math.PI - Math.PI/2;
     const tentacleLength = 30 + Math.sin(this.animationTimer * 0.1 + i) * 10;
@@ -2843,7 +2732,6 @@
       Math.sin(tentacleAngle) * this.radius
     );
     
-    // Curva do tentáculo com movimento
     for (let j = 1; j <= 3; j++) {
       const segmentLength = tentacleLength / 3;
       const curveX = Math.cos(tentacleAngle) * (this.radius + segmentLength * j) + 
@@ -2862,7 +2750,6 @@
     ctx.stroke();
   }
 
-  // Marcas rúnicas flutuantes
   for (let i = 0; i < 8; i++) {
     const runeAngle = (i / 8) * Math.PI * 2 + this.animationTimer * 0.02;
     const runeDist = this.radius + 20 + Math.sin(this.animationTimer * 0.05 + i) * 5;
@@ -2877,9 +2764,7 @@
     ctx.strokeStyle = `rgba(200, 100, 255, ${0.5 + Math.sin(this.animationTimer * 0.1 + i) * 0.5})`;
     ctx.lineWidth = 2;
     
-    // Símbolo rúnico diferente para cada posição
     if (i % 4 === 0) {
-      // Cruz demoníaca
       ctx.beginPath();
       ctx.moveTo(-runeSize, 0);
       ctx.lineTo(runeSize, 0);
@@ -2891,7 +2776,6 @@
       ctx.lineTo(runeSize*0.7, -runeSize*0.7);
       ctx.stroke();
     } else if (i % 4 === 1) {
-      // Triângulo invertido
       ctx.beginPath();
       ctx.moveTo(0, -runeSize);
       ctx.lineTo(runeSize, runeSize);
@@ -2899,7 +2783,6 @@
       ctx.closePath();
       ctx.stroke();
     } else if (i % 4 === 2) {
-      // Espiral
       ctx.beginPath();
       for (let a = 0; a < Math.PI * 3; a += 0.1) {
         const r = runeSize * (1 - a / (Math.PI * 3));
@@ -2907,7 +2790,6 @@
       }
       ctx.stroke();
     } else {
-      // Olho estelar
       ctx.beginPath();
       ctx.arc(0, 0, runeSize, 0, Math.PI * 2);
       ctx.stroke();
@@ -2919,7 +2801,6 @@
     ctx.restore();
   }
 
-  // Aura interna pulsante
   const innerAura = ctx.createRadialGradient(0, 0, 0, 0, 0, this.radius * 0.8);
   innerAura.addColorStop(0, `rgba(150, 0, 200, ${0.3 + Math.sin(this.animationTimer * 0.15) * 0.2})`);
   innerAura.addColorStop(1, 'rgba(150, 0, 200, 0)');
@@ -2931,7 +2812,6 @@
 
   ctx.restore();
   
-  // Nome e barra de vida (mantido do original)
   ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
   ctx.fillRect(this.x - this.radius, this.y - this.radius - 20, this.radius * 2, 8);
   ctx.fillStyle = this.health > this.maxHealth / 2 ? "lime" : "red";
@@ -2945,8 +2825,7 @@
   ctx.fillText("DEVORADOR DE ALMAS", this.x, this.y - this.radius - 35);
   ctx.textAlign = "start";
   break;
-  break;
-            
+  
           default:
             ctx.beginPath();
             ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
@@ -2991,7 +2870,6 @@
         this.health -= amount;
         this.hitFlash = 3;
         
-        // Damage particles
         for (let i = 0; i < 5; i++) {
           this.particles.push({
             x: this.x,
@@ -3013,6 +2891,12 @@
         this.burnTimer = duration * 60;
         this.burnDamageTimer = 60;
       }
+
+      applyFreeze(duration) {
+        this.slowTimer = duration * 60;
+        this.isFrozen = true;
+        this.freezeDoTTimer = 60;
+      }
     }
 
     class FireTrail {
@@ -3029,7 +2913,6 @@
         this.lifetime--;
         this.radius = 60 * (this.lifetime / 240);
         
-        // Add fire particles
         if (this.lifetime % 5 === 0) {
           for (let i = 0; i < 3; i++) {
             const angle = Math.random() * Math.PI * 2;
@@ -3046,7 +2929,6 @@
           }
         }
         
-        // Update particles
         this.particles = this.particles.filter(p => p.life > 0);
         this.particles.forEach(p => {
           p.x += p.dx;
@@ -3057,7 +2939,6 @@
       }
       
       draw() {
-        // Draw particles
         this.particles.forEach(p => {
           ctx.globalAlpha = p.life / 30;
           ctx.fillStyle = p.color;
@@ -3140,7 +3021,7 @@
 
       update() {
         this.animationTimer++;
-        // Store trail positions
+        
         if (this.trail.length > 5) this.trail.shift();
         this.trail.push({x: this.x, y: this.y});
         
@@ -3153,7 +3034,6 @@
         this.x += Math.cos(this.angle) * this.speed;
         this.y += Math.sin(this.angle) * this.speed;
         
-        // Add particles
         if (this.animationTimer % 3 === 0) {
           this.particles.push({
             x: this.x,
@@ -3170,13 +3050,11 @@
           this.alive = false;
         }
         
-        // Update particles
         this.particles = this.particles.filter(p => p.life > 0);
         this.particles.forEach(p => p.life--);
       }
 
       draw() {
-        // Draw particles
         this.particles.forEach(p => {
           ctx.globalAlpha = p.life / 20;
           ctx.fillStyle = p.color;
@@ -3186,7 +3064,6 @@
         });
         ctx.globalAlpha = 1;
         
-        // Draw trail
         if (this.trail.length > 1) {
           ctx.strokeStyle = this.burning ? 'rgba(255, 100, 0, 0.3)' : 'rgba(200, 200, 255, 0.3)';
           ctx.lineWidth = 2;
@@ -3226,7 +3103,6 @@
           ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
           ctx.fill();
           
-          // Efeito de chama
           for (let i = 0; i < 3; i++) {
             ctx.beginPath();
             ctx.moveTo(this.x, this.y - this.radius);
@@ -3269,7 +3145,6 @@
       }
       
       update() {
-        // Store trail positions
         if (this.trail.length > 10) this.trail.shift();
         this.trail.push({x: this.x, y: this.y});
         
@@ -3278,7 +3153,6 @@
           this.x += Math.cos(angle) * this.speed;
           this.y += Math.sin(angle) * this.speed;
           
-          // Add particles
           if (Math.random() < 0.3) {
             this.particles.push({
               x: this.x,
@@ -3303,12 +3177,11 @@
             
             if (Math.hypot(player.x - this.x, player.y - this.y) < player.radius + this.radius) {
               player.takeDamage(this.damage);
-              player.applySlow(5); // 5 seconds slow
+              player.applySlow(5);
             }
           }
         }
         
-        // Update particles
         this.particles = this.particles.filter(p => p.life > 0);
         this.particles.forEach(p => {
           p.x += p.dx;
@@ -3319,7 +3192,6 @@
       }
       
       draw() {
-        // Draw particles
         this.particles.forEach(p => {
           ctx.globalAlpha = p.life / 25;
           ctx.fillStyle = p.color;
@@ -3329,7 +3201,6 @@
         });
         ctx.globalAlpha = 1;
         
-        // Draw trail
         if (this.trail.length > 1 && !this.impacted) {
           ctx.strokeStyle = 'rgba(150, 0, 150, 0.3)';
           ctx.lineWidth = 3;
@@ -3377,7 +3248,7 @@
         this.y = Math.random() * (canvas.height - 100) + 50;
         this.radius = 20;
         this.type = type || this.getRandomType();
-        this.lifetime = 600; // 10 segundos
+        this.lifetime = 600;
         this.floatOffset = Math.random() * Math.PI * 2;
         this.floatSpeed = Math.random() * 0.05 + 0.05;
         this.originalY = this.y;
@@ -3400,7 +3271,6 @@
         this.y = this.originalY + Math.sin(this.floatOffset) * 10;
         this.lifetime--;
         
-        // Add particles
         if (this.animationTimer % 10 === 0) {
           this.particles.push({
             x: this.x,
@@ -3413,7 +3283,6 @@
           });
         }
         
-        // Update particles
         this.particles = this.particles.filter(p => p.life > 0);
         this.particles.forEach(p => {
           p.x += p.dx;
@@ -3426,7 +3295,6 @@
       draw() {
         this.update();
         
-        // Draw particles
         this.particles.forEach(p => {
           ctx.globalAlpha = p.life / 30;
           ctx.fillStyle = p.color;
@@ -3539,7 +3407,6 @@
       }
       
       update() {
-        // Store trail positions
         if (this.trail.length > 10) this.trail.shift();
         this.trail.push({x: this.x, y: this.y});
         
@@ -3548,7 +3415,6 @@
           this.x += Math.cos(angle) * this.speed;
           this.y += Math.sin(angle) * this.speed;
           
-          // Add particles
           if (Math.random() < 0.3) {
             this.particles.push({
               x: this.x,
@@ -3568,11 +3434,10 @@
               const dist = Math.hypot(this.x - e.x, this.y - e.y);
               if (dist < this.radius + e.radius) {
                 e.takeDamage(this.damage);
-                e.applyBurn(5); // 5 seconds burn
+                e.applyBurn(5);
               }
             });
             
-            // Create lava patch
             lavaPatches.push({
               x: this.x,
               y: this.y,
@@ -3584,7 +3449,6 @@
           this.fireDuration--;
         }
         
-        // Update particles
         this.particles = this.particles.filter(p => p.life > 0);
         this.particles.forEach(p => {
           p.x += p.dx;
@@ -3595,7 +3459,6 @@
       }
       
       draw() {
-        // Draw particles
         this.particles.forEach(p => {
           ctx.globalAlpha = p.life / 25;
           ctx.fillStyle = p.color;
@@ -3605,7 +3468,6 @@
         });
         ctx.globalAlpha = 1;
         
-        // Draw trail
         if (this.trail.length > 1 && !this.impacted) {
           ctx.strokeStyle = 'rgba(255, 100, 0, 0.3)';
           ctx.lineWidth = 3;
@@ -3681,7 +3543,6 @@
           break;
           
         case "multi":
-          // Visual effect for multi-arrow
           for (let i = 0; i < 20; i++) {
             const particleAngle = Math.random() * Math.PI * 2;
             const particleDist = Math.random() * 50;
@@ -3695,20 +3556,19 @@
           }
           
           for (let i = -11; i <= 11; i++) {
-            arrows.push(new Arrow(player.x, player.y, angle + i * 0.03));
+            const multiArrow = new Arrow(player.x, player.y, angle + i * 0.03, true);
+            multiArrow.color = '#00aaff';
+            multiArrow.damage = 25;
+            arrows.push(multiArrow);
           }
           break;
           
         case "freeze":
-          enemies.forEach(e => {
+          [...enemies, ...bosses].forEach(e => {
             e.speed *= 0.1;
-            e.slowTimer = 360; 
+            e.slowTimer = 300;
             e.isFrozen = true;
-          });
-          bosses.forEach(b => {
-            b.speed *= 0.3;
-            b.slowTimer = 180; 
-            b.isFrozen = true;
+            e.freezeDoTTimer = 60;
           });
           freezeEffects.push(new FreezeEffect(player.x, player.y));
           break;
@@ -3733,26 +3593,24 @@
           }
           break;
           
-        case "shield":
-          player.shieldActive = true;
-          player.shieldTimer = 360;
+        case "fury":
+          player.furyActive = true;
+          player.furyTimer = 300;
           
-          // Shield activation effect
-          for (let i = 0; i < 30; i++) {
-            const shieldAngle = Math.random() * Math.PI * 2;
-            const shieldDist = Math.random() * 40;
-            const shieldX = player.x + Math.cos(shieldAngle) * shieldDist;
-            const shieldY = player.y + Math.sin(shieldAngle) * shieldDist;
+          for (let i = 0; i < 50; i++) {
+            const furyAngle = Math.random() * Math.PI * 2;
+            const furyDist = Math.random() * 100;
+            const furyX = player.x + Math.cos(furyAngle) * furyDist;
+            const furyY = player.y + Math.sin(furyAngle) * furyDist;
             
-            ctx.fillStyle = hellMode ? 'rgba(255, 100, 100, 0.7)' : 'rgba(0, 200, 255, 0.7)';
+            ctx.fillStyle = `rgba(255, 0, 0, 0.8)`;
             ctx.beginPath();
-            ctx.arc(shieldX, shieldY, 4, 0, Math.PI * 2);
+            ctx.arc(furyX, furyY, 4, 0, Math.PI * 2);
             ctx.fill();
           }
           break;
           
         case "meteor":
-          // Meteor call effect
           for (let i = 0; i < 50; i++) {
             const starX = Math.random() * canvas.width;
             const starY = Math.random() * canvas.height / 2;
@@ -3782,7 +3640,6 @@
         this.lifetime = 100;
         this.particles = [];
         
-        // Create explosion particles
         for (let i = 0; i < 50; i++) {
           const angle = Math.random() * Math.PI * 2;
           const speed = Math.random() * 5 + 2;
@@ -3801,7 +3658,6 @@
         this.lifetime--;
         this.radius = this.maxRadius * (this.lifetime / 30);
         
-        // Update particles
         this.particles = this.particles.filter(p => p.life > 0);
         this.particles.forEach(p => {
           p.x += p.dx;
@@ -3812,7 +3668,6 @@
       }
       
       draw() {
-        // Draw particles
         this.particles.forEach(p => {
           ctx.fillStyle = `rgba(255, ${100 + Math.floor(p.life * 5)}, 0, ${p.life / 50})`;
           ctx.beginPath();
@@ -3840,7 +3695,6 @@
         ctx.arc(this.x, this.y, this.radius * 0.7, 0, Math.PI * 2);
         ctx.stroke();
         
-        // Shockwave effect
         ctx.strokeStyle = `rgba(255, 200, 100, ${this.lifetime / 100})`;
         ctx.lineWidth = 2;
         ctx.beginPath();
@@ -3857,7 +3711,6 @@
         this.lifetime = 60;
         this.snowParticles = [];
         
-        // Create initial snow particles
         for (let i = 0; i < 100; i++) {
           this.snowParticles.push({
             x: Math.random() * canvas.width,
@@ -3871,7 +3724,6 @@
       update() {
         this.lifetime--;
         
-        // Update snow particles
         this.snowParticles.forEach(p => {
           p.y += p.speed;
           if (p.y > canvas.height) {
@@ -3880,7 +3732,6 @@
           }
         });
         
-        // Add new snow particles
         if (this.lifetime % 5 === 0) {
           this.snowParticles.push({
             x: Math.random() * canvas.width,
@@ -3892,7 +3743,6 @@
       }
       
       draw() {
-        // Draw snow particles
         this.snowParticles.forEach(p => {
           ctx.fillStyle = `rgba(255, 255, 255, ${this.lifetime / 60})`;
           ctx.beginPath();
@@ -3936,7 +3786,6 @@
           ctx.restore();
         }
         
-        // Ice crystal effect at center
         ctx.save();
         ctx.translate(this.x, this.y);
         
@@ -3968,7 +3817,6 @@
         this.lifetime = 20;
         this.branches = [];
         
-        // Create lightning branches between targets
         for (let i = 0; i < targets.length - 1; i++) {
           if (Math.random() < 0.7) {
             this.branches.push({
@@ -4009,7 +3857,6 @@
           
           ctx.stroke();
           
-          // Draw lightning impact effect on target
           ctx.beginPath();
           ctx.arc(target.x, target.y, 15 * intensity, 0, Math.PI * 2);
           ctx.fillStyle = `rgba(0, 200, 255, ${intensity * 0.5})`;
@@ -4019,7 +3866,6 @@
           lastY = target.y;
         }
         
-        // Draw branches
         for (const branch of this.branches) {
           ctx.beginPath();
           ctx.moveTo(branch.from.x, branch.from.y);
@@ -4073,9 +3919,9 @@
           cooldownMax = 660;
           cooldownCurrent = player.specialCooldowns.lightning;
           break;
-        case 'shield': 
-          cooldownMax = 900;
-          cooldownCurrent = player.specialCooldowns.shield;
+        case 'fury': 
+          cooldownMax = 1200;
+          cooldownCurrent = player.specialCooldowns.fury;
           break;
         case 'meteor': 
           cooldownMax = 1200;
@@ -4105,10 +3951,15 @@
         case "multi": specialName = "CHUVA DE FLECHAS"; break;
         case "freeze": specialName = "CONGELAMENTO"; break;
         case "lightning": specialName = "RELÂMPAGO"; break;
-        case "shield": specialName = "ESCUDO CÓSMICO"; break;
+        case "fury": specialName = "FÚRIA LENDÁRIA"; break;
         case "meteor": specialName = "ENCOMENDA DOS CÉUS"; break;
       }
       ctx.fillText(`PODER: ${specialName}`, 20, 120);
+      
+      if (player.furyActive) {
+        ctx.fillStyle = "rgba(255, 0, 0, 0.8)";
+        ctx.fillText(`FÚRIA: ${Math.ceil(player.furyTimer / 60)}s`, 20, 150);
+      }
       
       if (player.shieldActive) {
         ctx.fillStyle = hellMode ? "rgba(255, 100, 100, 0.8)" : "rgba(0, 200, 255, 0.8)";
@@ -4144,7 +3995,7 @@
       
       if (player.dashCooldown > 0) {
         ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
-        ctx.fillText(`DASH: ${Math.ceil(player.dashCooldown / 60)}s`, 20, hellMode ? 270 : 240);
+        ctx.fillText(`DASH: ${Math.ceil(player.dashCooldown / 60)}s`, 20, 270);
       }
     }
 
@@ -4200,7 +4051,10 @@
         waveDisplay.textContent = `WAVE: ${wave}`;
       }
       
-      if (Math.random() < 0.4) {
+      const multiCount = arrows.filter(a => a.isMultiArrow).length;
+      const multiChanceReduction = multiCount > 0 ? 0.5 : 1;
+      
+      if (Math.random() < 0.4 * multiChanceReduction) {
         powerUps.push(new PowerUp());
       }
     }
@@ -4212,18 +4066,15 @@
                       wave === 5 ? "REI VIOLETA" : 
                       `WAVE ${wave}`;
       
-      // Dark overlay
       ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       
-      // Wave box
       ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
       ctx.fillRect(canvas.width / 2 - 200, canvas.height / 2 - 80, 400, 160);
       ctx.strokeStyle = hellMode ? "#ff0000" : "#00ff88";
       ctx.lineWidth = 5;
       ctx.strokeRect(canvas.width / 2 - 200, canvas.height / 2 - 80, 400, 160);
       
-      // Wave text
       ctx.fillStyle = hellMode ? "#ff5555" : "#00ffff";
       ctx.font = "48px 'Bangers', cursive";
       ctx.textAlign = "center";
@@ -4277,12 +4128,10 @@
     function gameLoop() {
       if (!gameActive) return;
       
-      // Clear canvas with background effect
       if (hellMode) {
         ctx.fillStyle = '#290a0a';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         
-        // Hell background effect
         for (let i = 0; i < 30; i++) {
           const x = Math.random() * canvas.width;
           const y = Math.random() * canvas.height;
@@ -4298,7 +4147,6 @@
         ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         
-        // Star background effect
         ctx.fillStyle = "white";
         for (let i = 0; i < 150; i++) {
           const alpha = Math.random() * 0.8 + 0.2;
@@ -4325,7 +4173,7 @@
         
         ctx.font = "24px 'Press Start 2P', cursive";
         ctx.fillStyle = "white";
-        ctx.fillText(`VOCÊ CHEGOU ATÊ A WAVE ${currentWave}`, canvas.width / 2, canvas.height / 2 + 20);
+        ctx.fillText(`VOCÊ CHEGOU ATÉ A WAVE ${currentWave}`, canvas.width / 2, canvas.height / 2 + 20);
         ctx.fillText(`PONTUAÇÃO: ${score}`, canvas.width / 2, canvas.height / 2 + 60);
         
         if (score > highScore) {
@@ -4365,10 +4213,9 @@
           player.takeDamage(e.damage);
         }
         
-        // Check if enemy is in lava
         lavaPatches.forEach(lava => {
           if (Math.hypot(e.x - lava.x, e.y - lava.y) < e.radius + lava.radius) {
-            e.applyBurn(5); // 5 seconds burn
+            e.applyBurn(5);
           }
         });
       });
@@ -4381,10 +4228,9 @@
           player.takeDamage(b.damage);
         }
         
-        // Check if boss is in lava
         lavaPatches.forEach(lava => {
           if (Math.hypot(b.x - lava.x, b.y - lava.y) < b.radius + lava.radius) {
-            b.applyBurn(5); // 5 seconds burn
+            b.applyBurn(5);
           }
         });
       });
@@ -4452,7 +4298,6 @@
       lavaPatches.forEach(p => {
         p.lifetime--;
         
-        // Draw lava patch with animation
         const pulse = Math.sin(Date.now() / 200) * 5;
         const gradient = ctx.createRadialGradient(
           p.x, p.y, 0,
@@ -4467,7 +4312,6 @@
         ctx.arc(p.x, p.y, p.radius + pulse, 0, Math.PI * 2);
         ctx.fill();
         
-        // Draw lava bubbles
         for (let i = 0; i < 3; i++) {
           const bubbleX = p.x + Math.random() * p.radius * 2 - p.radius;
           const bubbleY = p.y + Math.random() * p.radius * 2 - p.radius;
@@ -4480,20 +4324,12 @@
             ctx.fill();
           }
         }
-       
-        if (Math.hypot(player.x - p.x, player.y - p.y) < player.radius + p.radius) {
-          player.slowTimer = 18;
-          if (p.lifetime % 60 === 0) { 
-            player.takeDamage(10);
-          }
-        }
       });
 
       darkPatches = darkPatches.filter(p => p.lifetime > 0);
       darkPatches.forEach(p => {
         p.lifetime--;
         
-        // Draw dark patch with animation
         const pulse = Math.sin(Date.now() / 200) * 5;
         const gradient = ctx.createRadialGradient(
           p.x, p.y, 0,
@@ -4508,7 +4344,6 @@
         ctx.arc(p.x, p.y, p.radius + pulse, 0, Math.PI * 2);
         ctx.fill();
         
-        // Draw dark energy effects
         for (let i = 0; i < 3; i++) {
           const energyX = p.x + Math.random() * p.radius * 2 - p.radius;
           const energyY = p.y + Math.random() * p.radius * 2 - p.radius;
@@ -4523,8 +4358,8 @@
         }
        
         if (Math.hypot(player.x - p.x, player.y - p.y) < player.radius + p.radius) {
-          player.applySlow(0.5); // 30% slow
-          player.applyBurn(0.5); // 0.5 seconds burn
+          player.applySlow(0.5);
+          player.applyBurn(0.5);
           if (p.lifetime % 60 === 0) { 
             player.takeDamage(15);
           }
@@ -4534,18 +4369,29 @@
       arrows.forEach(a => {
         enemies.forEach((e, ei) => {
           if (Math.hypot(a.x - e.x, a.y - e.y) < e.radius) {
-            e.takeDamage(a.damage);
+            const damageMultiplier = a.isMultiArrow ? Math.pow(0.55, a.hitCount) : 1;
+            const finalDamage = a.damage * damageMultiplier * (player.furyActive ? 1.2 : 1);
+            
+            e.takeDamage(finalDamage);
             
             score += e.scoreValue * (1 + player.combo * 0.1);
             
             if (e.health <= 0) {
               player.kills++;
-              if (Math.random() < 0.05) {
+              const multiCount = arrows.filter(arrow => arrow.isMultiArrow).length;
+              const multiChanceReduction = multiCount > 0 ? 0.5 : 1;
+              
+              if (Math.random() < 0.05 * multiChanceReduction) {
                 powerUps.push(new PowerUp());
               }
             }
             
-            if (a.pierce <= 0) {
+            if (a.isMultiArrow) {
+              a.hitCount++;
+              if (a.hitCount > 10) {
+                a.alive = false;
+              }
+            } else if (a.pierce <= 0) {
               a.alive = false;
             } else {
               a.pierce--;
@@ -4555,13 +4401,21 @@
         
         bosses.forEach(b => {
           if (Math.hypot(a.x - b.x, a.y - b.y) < b.radius) {
-            b.takeDamage(a.damage * 0.6);
+            const damageMultiplier = a.isMultiArrow ? Math.pow(0.55, a.hitCount) : 1;
+            const finalDamage = a.damage * damageMultiplier * 0.6 * (player.furyActive ? 1.2 : 1);
+            
+            b.takeDamage(finalDamage);
             
             if (b.health <= 0) {
               score += b.scoreValue * (1 + player.combo * 0.2);
             }
             
-            if (a.pierce <= 0) {
+            if (a.isMultiArrow) {
+              a.hitCount++;
+              if (a.hitCount > 10) {
+                a.alive = false;
+              }
+            } else if (a.pierce <= 0) {
               a.alive = false;
             } else {
               a.pierce--;
